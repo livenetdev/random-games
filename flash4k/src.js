@@ -1,14 +1,14 @@
 let M=Math,S=M.sin,Q=M.cos,W=320,H=180,C=c.getContext('2d'),I=C.createImageData(W,H),D=I.data,
 PH=new Float32Array(W*H*3),
-X=0,Y=0,a=-1.97,fx=-14,fy=16,fz=0,gx=22,gy=-50,
-t=0,fd=9,fa=0,tf=-999,film=12,e=0,et=0,tt=0,ti=0,fl=0,hz=90,wk=0,k={},A,nb,
-tx=[[99,"Mara ran into the pines at dusk. Her camera has twelve flashes.<br><small>&larr; &rarr; turn &middot; &uarr; walk &middot; SPACE flash</small>"],
-[46,'Her flashlight, blinking in the trees.'],
-[36,'It walks when I walk. It stops when the flash fires.'],
-[22,'It poses for every picture.'],
-[9,'Mara?']],
+X=0,Y=0,a=-1.97,fx=1e3,fy=0,ac=0,st=0,fz=0,gx=22,gy=-50,
+t=0,fd=9,fa=0,tf=-999,film=12,e=0,et=0,tt=0,ti=0,hz=90,wk=0,k={},A,nb,
+tx=[[99,"Kayla ran into the pines at dusk. Her camera has twelve flashes.<br><small>&larr; &rarr; turn &middot; &uarr; walk &middot; SPACE flash</small>"],
+[50,'Her flashlight. Walk to it.'],
+[42,'Something else is here.'],
+[34,'It moves only in the dark. A flash holds it.'],
+[9,'Kayla?']],
 say=s=>{T.innerHTML=s;T.style.opacity=1;tt=t},
-Z=(u,w,s,k=-w/s)=>u*u+(w+s*.87)**2<s*s*.0072||k>0&&(M.abs(u)<s*(.035+.17*k*k)*M.min(1,(.8-k)*14)||k>.2&&k<.72&&M.abs(M.abs(u)-s*(.1+.06*(.72-k)))<s*.022)&&(k>.38||M.abs(u)>s*.012),
+Z=(u,w,s,k=-w/s)=>u*u+(w+s*.87)**2<s*s*.0072||k>0&&M.abs(u)<s*(.035+.17*k*k)*M.min(1,(.8-k)*14),
 TR=(x,y,i=M.floor(x/4),j=M.floor(y/4),h=M.abs(S(i*127.1+j*311.7)*43758.5%1))=>h>.35&&i*i+j*j>1&&i*9+j!=32&&[i*4+2+S(h*99)*1.3,j*4+2+S(h*71)*1.3,.15+h*.45,h],
 B=(v,p,d,r)=>{if(A){let s=A.createBufferSource(),g=A.createGain(),n=A.currentTime,P=A.createStereoPanner();s.buffer=nb;s.playbackRate.value=r;g.gain.setValueAtTime(v,n);g.gain.exponentialRampToValueAtTime(.001,n+d);P.pan.value=p;s.connect(g).connect(P).connect(A.destination);s.start(0,M.random()*2)}},
 O=[],
@@ -36,13 +36,12 @@ Rn=ph=>{
      hg=1.6*W/((y-hz)*cs);hx=X+dx*hg;hy=Y+dy*hg;
      al=M.abs(S(M.floor(hx*7)*91.3+M.floor(hy*7)*47.7)*9e3%1);
      L=90/(hg*hg+2.6)/M.hypot(hg,1.6)*(.15+.3*al);
-     if(S(hx*5+S(hy*3)*3)*S(hy*4-hx)>.85)L*=.3;
      r=L;g=L*(.5+.25*al);b=L*.3
     }
     for(let[p,s,z]of O)if((L=M.hypot(x-p,y-s)/z)<1)o+=.1*L*L;
     PH[i]=r+o;PH[i+1]=g+o;PH[i+2]=b+o*1.15
    }else{
-    let s=!inF&&d>=22&&y<hz?.03+.02*S(x*.02+y*.05+t*.003)*S(x*.007-y*.03):0,
+    let s=!inF&&d>=22&&y<hz?.03+.02*S(x*.02+y*.05):0,
      bc=gd<d&&bl?.5/(1+((x-gsx)**2+(y-gsy)**2)*gd*.05):0,
      vg=1-((x-160)**2+(y-90)**2)/45e3,n=(M.random()-.5)*12,
      P=v=>(1-M.exp(-v*vg))*270+n;
@@ -62,12 +61,14 @@ R=_=>{
  let u=t-et,gd=M.hypot(gx-X,gy-Y);fd=M.hypot(fx-X,fy-Y);fa=(M.atan2(fy-Y,fx-X)-a+9.42)%6.28-3.14;
  if(!e){
   a+=((k[39]|k[68])-(k[37]|k[65]))*.045;
-  let m=(k[38]|k[87])-(k[40]|k[83]),nx=X+Q(a)*m*.05,ny=Y+S(a)*m*.05,q=TR(nx,ny);
-  if(m)q&&(nx-q[0])**2+(ny-q[1])**2<(q[2]+.3)**2?t%30||B(.5,0,.2,.2):(X=nx,Y=ny,++wk%26||B(.25,0,.15,.4));
+  let m=(k[38]|k[87])-(k[40]|k[83]),nx=X+Q(a)*m*.04,ny=Y+S(a)*m*.04,ok=(x,y,q=TR(x,y))=>!q||(x-q[0])**2+(y-q[1])**2>(q[2]+.3)**2,pr=1-gd/54;
+  if(m)ok(nx,Y)&&(X=nx),ok(X,ny)&&(Y=ny),++wk%26||B(.25,0,.15,.4);
+  if(!ac&&pr>.2)ac=1,fx=X+Q(a+.7)*20,fy=Y+S(a+.7)*20;
   hz=90+(m?S(wk*.24)*1.5:0);
-  if(fz>0)fz--;else fx+=(X-fx)/fd*(.04+fd*.003),fy+=(Y-fy)/fd*(.04+fd*.003),M.random()<.006+.04/fd&&B(M.min(1,3/fd),S(fa),.05,1);
+  if(fz>0)fz--;else if(ac)fx+=(X-fx)/fd*(m=.004+pr*.065+fd*.001),fy+=(Y-fy)/fd*m,M.random()<.006+.04/fd&&B(M.min(1,3/fd),S(fa),.05,1);
+  ac&&fd<9&&t%(fd*7+12|0)<1&&B(.7,0,.12,.05);
   if(ti<tx.length&&gd<tx[ti][0])say(tx[ti++][1]);
-  if(fd<1.1)e=2,et=t,fx=X+Q(a)*1.3,fy=Y+S(a)*1.3,hz=200,snap(),say('The camera fired on its own.');
+  if(fd<1.1)fx=X+Q(a)*1.3,fy=Y+S(a)*1.3,hz=200,tf=0,snap(),++st>2?(e=2,et=t,say('The camera fired on its own.')):(say(st>1?'It let me go. It wants more pictures.':'The camera fired. It was right there.'),fx=X-Q(a)*25,fy=Y-S(a)*25);
   if(gd<1.6)e=1,et=t,say('Her flashlight. Still warm.')
  }else{
   if(u==220)say(e>1?'Police developed the roll. Twelve exposures. Thirteen photos.':'Behind me, a flash begins to charge.');
@@ -77,8 +78,8 @@ R=_=>{
  Rn(0);
  C.putImageData(I,0,0);
  let f=M.exp((tf-t)/50);
+ C.globalAlpha=1;C.fillStyle='#777';C.fillText(film,10,168);
  C.fillStyle='#f82';C.globalAlpha=f;C.fillText("'98 10 31",262,168);
- C.globalAlpha=.5;C.fillStyle='#999';C.fillText(film,10,168);C.globalAlpha=1;
  requestAnimationFrame(R)
 };
 c.width=W;c.height=H;D.fill(255);C.font='8px monospace';
@@ -93,8 +94,7 @@ onkeydown=E=>{
  }
  if(E.keyCode==32&&!E.repeat&&!e&&film>0){
   film--;snap();
-  if(M.abs(fa)<.55&&fd<16)fz=180,fd<6&&(fl++||say('It flinches from the light.'),fx=X-Q(a)*22,fy=Y-S(a)*22);
-  film||say('No more film.')
+  fz=180;fd<5&&(fx=X-Q(a)*20,fy=Y-S(a)*20)
  }
 };
 onkeyup=E=>k[E.keyCode]=0;

@@ -1,19 +1,21 @@
 # TWELVE EXPOSURES (4K)
 
-2D raycast found-photo horror. `index.html` = 4094 bytes, self-contained.
+2D raycast found-photo horror. `index.html` = 4096 bytes, self-contained.
 
-- **Play:** open `index.html`. `←/→` turn · `↑` walk · `Space` flash. Touch: left/right edge turn, middle walk, two fingers flash.
-- **Goal:** find Mara's blinking flashlight in a pitch-black pine forest. 12 flashes.
+- **Play:** open `index.html`. `←/→` turn · `↑` walk · `Space` flash. Touch: edges turn, middle walk, two fingers flash.
+- **Goal:** find Kayla's blinking flashlight in a pitch-black pine forest. 12 flashes.
 
-| Stakes loop | |
+| Pacing (tension curve) | |
 |---|---|
-| Darkness | you see nothing but faint sky between trunks and her blinking light |
-| Flash | the only way to see trees, the path, and *it*; costs 1 of 12 |
-| It | moves only in the dark; rubber-band speed (fast far, ≈ your pace near) |
-| Twig snaps | stereo-panned toward it, louder/more frequent as it closes; only way to locate it |
-| Flash it in view | it freezes 3 s; inside 6 m it flees 22 m |
-| Bump a tree / stop / turn | it gains on you |
-| Caught | the camera fires on its own |
+| Opening ~8 s | safe: only you, the dark, her blinking flashlight |
+| Reveal (20% of the way) | it appears 20 m off to the side; first flash shows only its eyeshine |
+| Rule (taught in text) | it moves only in the dark; **any** flash freezes it 3 s; a flash within 5 m drives it off 20 m |
+| Escalation | its speed scales with your progress: slower than you early, faster than you near the end |
+| Heartbeat | starts at 9 m, quickens as it closes: the cue to flash, no aiming needed |
+| Close calls | contact 1 and 2: the camera fires itself, its face, then it drops back 25 m; contact 3: death |
+| Movement | slide along trunks instead of sticking |
+
+Bot playtest: walk straight, never flash → 2 close calls, scraped through. Flash on heartbeat → clean win in ~30 s with 7 of 12 flashes left.
 
 | Realism trick (low budget) | Why it works |
 |---|---|
@@ -26,7 +28,5 @@
 | Orange `'98 10 31` date imprint on photos only, film counter | disposable-camera vernacular = "this happened" |
 | Live view: grain + near-black sky gradient | night vision is noise; silhouettes only |
 | Audio: wind, leaf-crunch steps, shutter click, rising flash-capacitor whine | the whine is the ending |
-
-Bot playtest: never flashing → always caught. Turn-and-flash on approach → won 3/4, using 5–7 flashes.
 
 Build: `npm i terser roadroller && NODE_MODS=./node_modules/ node build.js`
