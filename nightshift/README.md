@@ -24,6 +24,7 @@ The ward lights failed at midnight. Your lantern is the only light. Shades come 
 
 ## Night Terrors
 Optional modifiers, unlocked after 3 shifts. Each adds its % to the shift's ash. The Daily Shift picks a staff member (locked ones too), a bonus weapon and 2 terrors from the date.
+
 | Terror | Effect | Ash |
 |---|---|---|
 | 🌑 Lights Out | light radius −25% | +30% |
