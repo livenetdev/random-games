@@ -1,0 +1,11 @@
+{
+  "private": true,
+  "scripts": {
+    "postinstall": "node patch-roadroller.js",
+    "build": "node build.js"
+  },
+  "devDependencies": {
+    "roadroller": "2.1.0",
+    "terser": "5.51.2"
+  }
+}
