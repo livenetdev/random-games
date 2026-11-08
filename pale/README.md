@@ -1,5 +1,7 @@
 # PALE — 4 KB atmospheric horror
 
+![preview](preview.png)
+
 `index.html` = **4093 bytes**, self-contained, no network. Open it (file:// works) → click.
 
 | | |
