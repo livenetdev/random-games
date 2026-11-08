@@ -122,6 +122,26 @@ button.big small{font-size:10px;opacity:.6;font-weight:400}
 #codeIn{flex:2 1 0;min-width:0;font:inherit;font-size:13px;color:var(--fg);background:#0009;border:1px solid #ffffff2a;padding:10px;letter-spacing:.08em;text-transform:uppercase}
 #codeIn:focus,button:focus-visible{outline:1px solid var(--acc);outline-offset:2px}
 button.mini{padding:1px 6px;font-size:9px;margin-left:6px}
+.mtop{display:flex;flex-direction:column;gap:10px}
+.mtop .title{font-size:clamp(34px,10vw,60px)}
+.card2{display:flex;flex-direction:column;gap:12px;border:1px solid #ffffff1c;background:#0a0807cc;padding:14px;box-shadow:0 20px 60px #000a}
+.seg{display:flex;border:1px solid #ffffff26}
+.seg button{flex:1 1 0;min-width:0;border:0;border-right:1px solid #ffffff1a;background:transparent;padding:10px 4px;font-size:11px}
+.seg button:last-child{border-right:0}
+.seg button.on{background:#ffb35c1f;color:var(--acc);box-shadow:inset 0 -2px 0 var(--acc)}
+.wmap{display:flex;justify-content:space-between;position:relative;padding:2px 0}
+.wmap:before{content:"";position:absolute;left:14px;right:14px;top:50%;height:1px;background:#ffffff22}
+.wn{position:relative;width:30px;height:30px;padding:0;border-radius:50%;font-size:9px;letter-spacing:0;background:#000;color:var(--dim)}
+.wn.r{color:var(--fg);border-color:#ffffff66}
+.wn.sel{background:var(--acc);border-color:var(--acc);color:#000;font-weight:700;box-shadow:0 0 14px #ffb35c88}
+.wn:disabled{opacity:.3}
+.mdesc{font-size:12px;color:var(--dim);line-height:1.5;min-height:3em;text-align:left}
+.mdesc b{color:var(--fg);font-weight:700}
+.nav button{padding:8px 6px;font-size:10px}
+#stairc{position:fixed;left:0;right:0;top:max(84px,calc(env(safe-area-inset-top) + 72px));padding:0 16px;text-align:center;pointer-events:none;opacity:0;color:#7dffa8;display:flex;flex-direction:column;gap:2px}
+#stairc b{font-size:18px;letter-spacing:.3em;text-shadow:0 0 18px #3dff88}
+#stairc span{font-size:11px;letter-spacing:.08em;color:#bfffd4}
+#stairc.on{animation:ban 2.4s ease-out forwards}
 #pause{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;font-size:14px;letter-spacing:.4em;background:#0008;text-transform:uppercase}
 #err{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:24px;text-align:center;color:var(--dim)}
 </style>
@@ -136,20 +156,21 @@ button.mini{padding:1px 6px;font-size:9px;margin-left:6px}
 </div>
 <div id="banner"><div class="b1"></div><div class="b2"></div></div>
 <div id="toast"></div>
+<div id="stairc"><b></b><span></span></div>
 
 <div id="menu" class="panel">
-  <div class="title">NIGHT<span>SHIFT</span></div>
-  <div class="sub">carry the light down through the wards</div>
-  <div id="mRank"></div>
-  <button id="bPlay" class="big">Begin shift <small>[space]</small></button>
-  <div class="row"><button id="bWard"></button><button id="bDaily"></button><button id="b4k"></button></div>
-  <button id="bGhost" class="hide"></button>
-  <div class="row"><button id="bVigil"></button><button id="bConds"></button></div>
-  <div class="row"><button id="bShop">Upgrades</button><button id="bFiles"></button><button id="bRecs"></button></div>
+  <div class="mtop"><div class="title">NIGHT<span>SHIFT</span></div><div id="mRank"></div></div>
+  <div class="card2">
+    <div class="seg" id="modes" role="tablist" aria-label="Mode"></div>
+    <div class="wmap" id="wmap" aria-label="Start ward"></div>
+    <div class="mdesc" id="mDesc"></div>
+    <button id="bPlay" class="big"></button>
+    <div class="row" id="mSub"><button id="bConds"></button><button id="bGhost" class="hide"></button></div>
+  </div>
   <div class="stats" id="mStats"></div>
   <div class="missions" id="mList"></div>
-  <div class="help">← → / A D · touch: hold left or right half · hold Shift / a 2nd finger to cup the flame (slower turns, heat builds near walls), release to flare · R resets</div>
-  <div class="row"><button id="bMute"></button></div>
+  <nav class="row nav"><button id="bShop">Upgrades</button><button id="bFiles"></button><button id="bRecs"></button><button id="bMute"></button></nav>
+  <div class="help">←/→ steer · hold Shift to cup the flame, release to flare · R reset · touch: hold a side, 2nd finger cups · menu: ←/→ mode, ↑/↓ start ward</div>
 </div>
 
 <div id="over" class="panel hide">
@@ -157,16 +178,16 @@ button.mini{padding:1px 6px;font-size:9px;margin-left:6px}
   <div class="oscore" id="oScore">0</div>
   <div class="obest" id="oBest"></div>
   <div class="near" id="oNear"></div>
+  <div id="rev" class="hide"><p>THE DARK HESITATES</p><button id="bRev"></button><div class="cd" id="revCd"></div></div>
+  <button id="bRetry" class="big">Again <small>[space]</small></button>
+  <div class="row"><button id="bSeed">Same seed [R]</button><button id="bShop2">Upgrades</button><button id="bMenu">Menu [Esc]</button></div>
   <div id="oCard"></div>
   <div id="oFiles" class="files"></div>
-  <div id="rev" class="hide"><p>THE DARK HESITATES</p><button id="bRev"></button><div class="cd" id="revCd"></div></div>
   <div id="oPost">
     <div class="rewards" id="oRew"></div>
     <div id="oRank" style="margin-top:12px"></div>
     <div class="missions" id="oMis" style="margin-top:12px"></div>
   </div>
-  <button id="bRetry" class="big">Again <small>[space]</small></button>
-  <div class="row"><button id="bSeed">Same seed [R]</button><button id="bShop2">Upgrades</button><button id="bMenu">Menu</button></div>
 </div>
 
 <div id="shop" class="panel hide">

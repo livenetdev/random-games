@@ -14,7 +14,7 @@ const vib=p=>{try{navigator.vibrate&&navigator.vibrate(p)}catch(e){}};
 
 // ---------------------------------------------------------------- save
 const SKEY='nightshift.v1';
-const defSave=()=>({best:0,bestWard:0,runs:0,embers:0,xp:0,lvl:1,up:{mag:0,kin:0,sh:0,grz:0},col:0,owned:[0],missions:[],mtier:{},grazeTotal:0,streak:0,lastDay:'',startWard:0,mute:false,daily:{},beyond:false,pb:{},files:[],hairBest:9,ghosts:{},ach:[],hist:[],pbSeed:'',cutSeed:'',cond:[],vigil:{unb:0,s:0}});
+const defSave=()=>({best:0,bestWard:0,runs:0,embers:0,xp:0,lvl:1,up:{mag:0,kin:0,sh:0,grz:0},col:0,owned:[0],missions:[],mtier:{},grazeTotal:0,streak:0,lastDay:'',startWard:0,mute:false,daily:{},beyond:false,pb:{},files:[],hairBest:9,ghosts:{},ach:[],hist:[],pbSeed:'',cutSeed:'',cond:[],vigil:{unb:0,s:0},wsp:[],mode:'n',skips:0});
 let SV=defSave();
 try{const j=JSON.parse(localStorage.getItem(SKEY));if(j&&typeof j==='object')SV=Object.assign(defSave(),j,{up:Object.assign(defSave().up,j.up||{})})}catch(e){}
 const save=()=>{try{localStorage.setItem(SKEY,JSON.stringify(SV))}catch(e){}};
@@ -91,7 +91,7 @@ const ACH=[['first','First light','Finish a shift',10],['w5','Chapel bells','Rea
   ['beyond','Walked out','Survive Ward Nine',150],['hair','Hairline','Graze within 1.0°',30],['chain25','Chain 25','Build a 25 chain',40],
   ['x8','×8','Hit the ×8 multiplier',60],['turbo','White heat','Release a white-hot flare',20],['turbo3','Bonfire','3 white-hot flares in one shift',50],
   ['ghost','Ghostbuster','Outlast a ghost lantern',40],['miser','Miser','4K Cut: reach 60 s with 4,096+ ticks left',60],['gold5','Gold rush','5 gold embers in one shift',40],
-  ['heat','Feverish','Finish a shift at +100% heat',60],['unbroken','Unbroken','Hold a vigil 120 s without a hit',50],['files','Archivist','Recover all 27 case files',100],['week','Regular','Play 7 days in a row',70],['rank17','Resident','Reach rank 17',60]];
+  ['stair','Fire exit','Skip a ward through a stairwell',20],['express','Express','Skip 3 wards in one shift',60],['heat','Feverish','Finish a shift at +100% heat',60],['unbroken','Unbroken','Hold a vigil 120 s without a hit',50],['files','Archivist','Recover all 27 case files',100],['week','Regular','Play 7 days in a row',70],['rank17','Resident','Reach rank 17',60]];
 function ach(id){if(SV.ach.includes(id))return;const a=ACH.find(x=>x[0]===id);if(!a)return;SV.ach.push(id);SV.embers+=a[3];save();toast('★ '+a[1]+' · +'+a[3]+' ✦');AU.mission()}
 const CONDS=[['brittle','Brittle','Side contact kills. No sliding along walls.',.25],['dark','Blackout','Fog closes in; the lantern reaches half as far.',.2],
   ['vert','Vertigo','The tunnel spins 1.6× faster.',.2],['fast','Overtime','Everything moves 15% faster.',.3],['mirror','Mirror','Left and right are swapped.',.15],
@@ -102,6 +102,7 @@ const heatOf=ids=>CONDS.reduce((h,c)=>h+(ids.includes(c[0])?c[3]:0),0);
 const codeOf=(seed,bits)=>'NS-'+hex(seed)+'-'+bits.toString(36).toUpperCase();
 function parseCode(t){const m=/^\s*NS-([0-9A-F]{8})-([0-9A-Z]{1,2})\s*$/i.exec(t||'');if(!m)return null;const b=parseInt(m[2],36);return b<128?{seed:parseInt(m[1],16)>>>0,bits:b}:null}
 function WP(i,C){C=C||S.C||{};const P=wardP(i);return Object.assign({},P,{v:P.v*(C.fast?1.15:1),spin:P.spin*(C.vert?1.6:1),tight:P.tight*(C.tight?.82:1)})}
+const headStart=k=>k?Math.floor(.5*(SV.wsp[k]||0)):0;
 const addScore=x=>{S.score+=x*S.hm};
 const pbKey=()=>S.vigil?'v':S.cut?'c':S.daily?'d'+today():'n'+(S.bits?'-'+S.bits:'');
 const bestFor=()=>S.vigil?(SV.vigil.s||0):S.cut?((SV.pb.c&&SV.pb.c.s)||0):S.daily?(SV.daily[today()]||0):SV.best;
@@ -200,6 +201,8 @@ const AU={c:null,on:!SV.mute,nb:0,beat:0,bq:[],
   file(){if(!this.c)return;const t=this.c.currentTime;this.tone(220,1.2,'sine',.12,t,0,1);this.tone(233,1.2,'sine',.08,t,0,1);this.noise(.8,.05,t,'bandpass',900,6,1)},
   charge(l){this.tone(l>1?1568:1175,.09,'square',.04,0,0,1)},
   turbo(l){if(!this.c)return;const t=this.c.currentTime;this.noise(.35,.18,t,'bandpass',l>1?2600:1800,1.5,1);this.tone(l>1?330:260,.35,'sawtooth',.07,t,l>1?990:700,1)},
+  stair(){if(!this.c)return;const t=this.c.currentTime;[0,7,12].forEach((s,i)=>this.tone(523*Math.pow(2,s/12),.4,'sine',.07,t+i*.08,0,1))},
+  skip(x){if(!this.c)return;const t=this.c.currentTime;[24,19,15,12,7,3,0].forEach((s,i)=>this.tone(220*Math.pow(2,(s+x)/12),.18,'triangle',.11,t+i*.05,0,1));this.tone(70,.7,'sine',.5,t+.35,35)},
   click(){this.tone(1200,.03,'square',.03)},
 };
 const WROOT=[0,3,-2,5,1,7,-4,2,6];
@@ -244,7 +247,7 @@ function startRun(o){
   const sw=daily||cut||vigil||o.fresh?0:Math.min(SV.startWard,SV.bestWard);
   const seed=o.seed!=null?o.seed:daily?parseInt(today().replace(/-/g,''),10):(Math.random()*4294967296>>>0);
   const P=WP(sw,C);
-  S={mode:'play',daily,cut,vigil,C,cond,bits:condBits(cond),hm:1+heatOf(cond),hits:0,unb:0,bestUnb:0,seed,sw,budget:4096,earned:0,rec:[],ga:0,gv:0,ghostOut:false,drift:0,dch:0,dlv:0,turbos:[0,0,0],golds:0,rotTot:0,passed:0,hair:9,hiT:0,curve:[0],splits:{[sw]:0},wg:{},newFiles:[],genR:mulberry32(seed),spinR:mulberry32(seed^0x5bd1e995),
+  S={mode:'play',daily,cut,vigil,C,cond,bits:condBits(cond),hm:1+heatOf(cond),hits:0,unb:0,bestUnb:0,stairs:{},stairSeq:0,stairWard:-1,genCount:0,express:0,skipped:0,skipT:0,skipping:false,seed,sw,budget:4096,earned:0,rec:[],ga:0,gv:0,ghostOut:false,drift:0,dch:0,dlv:0,turbos:[0,0,0],golds:0,rotTot:0,passed:0,hair:9,hiT:0,curve:[0],splits:{[sw]:0},wg:{},newFiles:[],genR:mulberry32(seed),spinR:mulberry32(seed^0x5bd1e995),
     t:sw*WL,t0:sw*WL,ward:sw,maxWard:sw,genWard:sw,genP:P,v:P.v,q:[],prev:null,lastZ:13,
     walls:[],orbs:[],th:-Math.PI/2,spin:0,spinV:0,spinDir:1,spinFlip:3,travel:S.travel||0,
     score:0,combo:0,comboT:0,mult:1,maxMult:1,grazes:0,emb:0,embF:0,shield:cut?0:SV.up.sh,inv:0,revives:0,
@@ -260,11 +263,18 @@ function startRun(o){
   if(cut)banner('4K CUT','4,096 ticks of steering · grazes refund',P.hue,1);
   else if(vigil)banner('VIGIL','no death · stay unbroken · E ends',P.hue,1);
   else banner('WARD '+P.num,P.name+(S.bits?'  ·  heat +'+Math.round((S.hm-1)*100)+'%':''),P.hue);
+  if(sw&&!daily&&!cut&&!vigil){S.score=headStart(sw);if(S.score)toast('Head start · +'+fmt(S.score)+' (half your best at Ward '+ROMAN[sw]+')')}
   hudStatic();unlock(sw,0);
 }
 
-function fillQ(){
+function fillQ(arrive){
   const r=S.genR,P=S.genP,pool=POOL[Math.min(S.genWard,4)];
+  S.genCount++;
+  if(S.stairWard!==S.genWard&&S.genCount>=3&&mod(arrive,WL)<WL*.55&&S.genWard<24&&r()<.45){
+    S.stairWard=S.genWard;const id=++S.stairSeq,c=5+ri(r,2),d=r()<.5?1:-1;let g=ri(r,P.n);S.stairs[id]={left:c,clean:true,seen:false};
+    for(let i=0;i<c;i++){S.q.push({dt:.36,m:full(P.n)&~(1<<g),st:id});g=mod(g+d,P.n)}
+    return;
+  }
   S.q.push(...PAT[pool[ri(r,pool.length)]](P.n,r));
 }
 function gaps(m,n){const g=[];for(let i=0;i<n;i++)if(!((m>>i)&1))g.push((i+.5)*TAU/n);return g}
@@ -277,14 +287,14 @@ function needed(pw,m,n,v,w){
 function spawn(){
   while(S.lastZ<SPAWN&&S.walls.length<MAXW-1){
     const arrive=S.t+(S.lastZ-ZP)/S.v,wi=Math.floor(arrive/WL);
-    if(wi>S.genWard){S.genWard=wi;S.genP=WP(wi);S.q=[];S.prev=null;S.lastZ+=S.v*1.2;continue}
-    if(!S.q.length)fillQ();
+    if(wi>S.genWard){S.genWard=wi;S.genP=WP(wi);S.genCount=0;S.q=[];S.prev=null;S.lastZ+=S.v*1.2;continue}
+    if(!S.q.length)fillQ(arrive);
     const P=S.genP,w=S.q.shift();
     let m=w.m;if(m===full(P.n))m&=~(1<<ri(S.genR,P.n));
     const tf=Math.max(w.dt*P.tight+WT/P.v,needed(S.prev,m,P.n,P.v,S.genWard));
     const gap=tf*P.v;
     const z=S.prev?S.lastZ+gap:S.lastZ;
-    const wall={z,m,n:P.n,minD:9,passed:false};
+    const wall={z,m,n:P.n,minD:9,passed:false,st:w.st||0};
     S.walls.push(wall);
     if(S.prev&&S.orbs.length<MAXO&&S.genR()<.42&&!S.C.barren){
       const g=gaps(m,P.n),seg=TAU/P.n,gold=S.genR()<.12;
@@ -343,7 +353,7 @@ function update(dt){
   if(!drift&&S.dch>0){turbo(S.dlv);S.dch=0;S.dlv=0}
   if(inp&&(!S.cut||S.budget>0)){
     const nt=S.th-inp*OMEGA*(drift?DRIFT:1)*dt;let ok=true;
-    for(const w of S.walls)if(overl(w)&&filled(w,nt)&&!filled(w,S.th)){ok=false;break}
+    for(const w of S.walls)if(overl(w)&&filled(w,nt)&&!filled(w,S.th)){ok=false;if(w.st)stairDirty(w.st);break}
     if(!ok&&S.C.brittle&&S.inv<=0&&!S.vigil){die();return}
     if(ok){S.th=nt;S.rotTot+=OMEGA*dt;if(S.cut)S.budget=Math.max(0,S.budget-dt*120)}
   }
@@ -352,14 +362,16 @@ function update(dt){
     const w=S.walls[i];
     if(overl(w)){
       if(S.inv<=0&&hitAt(w,S.th)){
+        if(w.st)stairDirty(w.st);
         if(S.shield>0){S.shield--;S.inv=1.2;S.walls.splice(i,1);i--;shieldBreak();continue}
         if(S.vigil){S.walls.splice(i,1);i--;gutter();continue}
         die();return;
       }
       if(S.inv<=0)w.minD=Math.min(w.minD,edgeD(w,S.th)||.004);
-    }else if(!w.passed&&w.z+WT<ZP){w.passed=true;S.passed++;if(w.minD<GRAZE){S.hair=Math.min(S.hair,w.minD);if(w.minD<.01745)ach('hair');graze()}}
+    }else if(!w.passed&&w.z+WT<ZP){w.passed=true;S.passed++;if(w.st){const st=S.stairs[w.st];if(st&&--st.left===0&&st.clean)skipWard()}if(w.minD<GRAZE){S.hair=Math.min(S.hair,w.minD);if(w.minD<.01745)ach('hair');graze()}}
   }
   S.walls=S.walls.filter(w=>w.z+WT>.25);
+  for(const w of S.walls)if(w.st&&w.z<20){const st=S.stairs[w.st];if(st&&!st.seen){st.seen=true;stairCall('STAIRWELL ↓','thread it without touching a wall to drop a ward');AU.stair()}}
   const pr=.28+.1*SV.up.mag;
   for(const o of S.orbs){
     if(!o.done&&o.z<=1.1){o.done=true;if(angD(o.a,S.th)<pr){o.got=true;collect(o)}}
@@ -383,6 +395,18 @@ function turbo(l){
   AU.turbo(l);vib(l>1?20:10);
   const p=proj(ZP,S.th,.05),c=l>1?'#ffffff':'#ffc861';burst(p[0],p[1],l>1?40:20,c,420,.5,3);ftext(p[0],p[1]-40,l>1?'WHITE FLARE':'flare',c,l>1?20:15);
   if(l>1){ach('turbo');if(S.turbos[2]>=3)ach('turbo3')}
+}
+function stairCall(a,b){const e=$('stairc');e.querySelector('b').textContent=a;e.querySelector('span').textContent=b;e.classList.remove('on');void e.offsetWidth;e.classList.add('on')}
+function stairDirty(id){const st=S.stairs[id];if(!st||!st.clean)return;st.clean=false;S.express=0;
+  const p=proj(ZP,S.th,.05);ftext(p[0],p[1]-46,'stairwell lost','#7dffa8',14);AU.tone(330,.25,'triangle',.08,0,160)}
+function skipWard(){
+  const target=(S.ward+1)*WL,rem=Math.max(0,target-S.t);
+  S.express++;S.skipped++;S.skipT+=rem;SV.skips++;
+  const bonus=Math.floor(rem*S.v*5*S.mult*(1+.5*S.express));addScore(bonus);
+  S.t=target;S.skipping=true;
+  const p=proj(ZP,S.th,.05);burst(p[0],p[1],50,'#7dffa8',480,.7,3);ftext(p[0],p[1]-50,'+'+fmt(bonus*S.hm),'#7dffa8',20);
+  S.flash=.6;S.pulse=2;AU.skip(S.express);vib([15,20,15,20,40]);
+  ach('stair');if(S.skipped>=3)ach('express');
 }
 function gutter(){
   S.hits++;S.bestUnb=Math.max(S.bestUnb,S.unb);S.unb=0;S.inv=1.4;S.combo=0;setMult();S.flash=.5;S.shake=.6;S.ab=.03;
@@ -431,13 +455,16 @@ function onWard(){
   const P=wardP(S.ward);
   S.maxWard=Math.max(S.maxWard,S.ward);S.sidesT=P.n;
   const sp=Math.floor(S.score);S.splits[S.ward]=sp;
+  if(S.sw===0&&!S.vigil&&!S.cut&&!S.daily&&S.ward<=8)SV.wsp[S.ward]=Math.max(SV.wsp[S.ward]||0,sp);
+  const skipped=S.skipping;S.skipping=false;if(!skipped)S.express=0;
   const ref=S.pb&&S.pb.sp&&S.pb.sp[S.ward],dl=ref!=null?'  ·  '+sgn(sp-ref)+' vs PB':'';
   unlock(S.ward,0);if(S.ward>=4)ach('w5');if(S.ward>=8)ach('w9');if(S.ward>=9)ach('beyond');S.flash=.45;S.pulse=1.5;
   AU.ward();AU.drone(.1,WROOT[S.ward%9]);vib(25);
   if(S.ward===9){
     banner('SHIFT SURVIVED','you walked out of Ward Nine'+dl,.13);
     if(!SV.beyond){SV.beyond=true;SV.embers+=150;save();toast('Escaped Ward Nine · +150 ✦')}
-  }else banner('WARD '+P.num,P.name+dl,P.hue);
+  }else if(skipped)banner('↓ WARD '+P.num,'skipped by stairwell'+(S.express>1?' · express ×'+(1+.5*S.express).toFixed(1):'')+dl,.38);
+  else banner('WARD '+P.num,P.name+dl,P.hue);
   hudStatic();
 }
 function stats(){
@@ -543,6 +570,7 @@ function cardHTML(sc,prev){
   if(ws.length>1||S.pb){const ps=S.pb&&S.pb.sp||{};
     h+='<div class="spl">'+ws.map(w=>{const r=ps[w];return`<span>${w>8?'∞':ROMAN[w]} <b>${fmt(S.splits[w])}</b>${r!=null&&w!==S.sw?` <em class="${S.splits[w]>=r?'up':'dn'}">${sgn(S.splits[w]-r)}</em>`:''}</span>`}).join('')
       +`<span>end <b>${fmt(sc)}</b>${prev?` <em class="${sc>=prev?'up':'dn'}">${sgn(sc-prev)}</em>`:''}</span></div>`}
+  if(S.skipped)h+=`<div class="spl"><span>stairwells <b>${S.skipped}</b> · skipped <b>${S.skipT.toFixed(1)}s</b></span></div>`;
   h+=`<div class="spl"><span>${S.daily?'daily <b>#'+dayNo()+'</b>':'code <b>'+codeOf(S.seed,S.bits)+'</b> <button id="bCopy" class="mini">copy</button>'}</span></div>`;
   return h;
 }
@@ -570,23 +598,35 @@ function missionsHTML(el){
   el.innerHTML='<div class="mh">missions</div>'+SV.missions.map(m=>{const T=MT[m.id],p=m.done?1:Math.min(1,m.p/m.n);
     return`<div class="m${m.done?' done':''}"><span class="r">+${m.r} ✦</span>${T.t(m.n)}<div class="pb"><i style="width:${p*100}%"></i></div></div>`}).join('');
 }
+const MODES={n:'Shift',d:'Daily',c:'4K Cut',v:'Vigil'};
 function menuHTML(){
   ensureMissions();
   rankHTML($('mRank'));
-  const sw=Math.min(SV.startWard,SV.bestWard);
-  $('bWard').textContent='Start ▸ '+ROMAN[sw];$('bWard').disabled=SV.bestWard<1;
-  const db=SV.daily[today()];
-  $('bDaily').textContent='Daily #'+dayNo()+(db?' · '+fmt(db):'');
+  const m=SV.mode||'n',sw=Math.min(SV.startWard,SV.bestWard);
+  $('modes').innerHTML=Object.keys(MODES).map(k=>`<button role="tab" aria-selected="${k===m}" class="${k===m?'on':''}" data-mode="${k}">${MODES[k]}</button>`).join('');
+  $('wmap').classList.toggle('hide',m!=='n');
+  $('wmap').innerHTML=ROMAN.map((r,i)=>{const ok=i<=SV.bestWard;return`<button class="wn${ok?' r':''}${i===sw?' sel':''}" data-w="${i}" ${ok?'':'disabled'} title="${ok?'Start at Ward '+r:'Reach Ward '+r+' to start here'}">${r}</button>`}).join('');
+  const db=SV.daily[today()],cb=SV.pb.c&&SV.pb.c.s,hs=headStart(sw);
+  const D={n:sw?`Start at <b>Ward ${ROMAN[sw]} · ${WARDS[sw][0]}</b> with a <b>+${fmt(hs)}</b> head start (half your best there).`:`Survive nine wards. Thread a green <b>stairwell</b> cleanly to drop a ward early; chain drops for express bonuses.`,
+    d:`Daily <b>#${dayNo()}</b>: the same walls for everyone today. ${db?'Today’s best <b>'+fmt(db)+'</b>.':'No run yet today.'}`,
+    c:`<b>4,096</b> ticks of steering; grazes and embers refund. ${cb?'Best <b>'+fmt(cb)+'</b>.':''}`,
+    v:`No death. A hit gutters the flame and resets the chain. ${SV.vigil.unb?'Longest unbroken <b>'+SV.vigil.unb.toFixed(1)+'s</b>.':'Play as long as you like.'}`};
+  $('mDesc').innerHTML=D[m];
+  $('bPlay').innerHTML={n:'Begin shift',d:'Play daily',c:'Begin 4K cut',v:'Begin vigil'}[m]+' <small>[space]</small>';
+  const hc=heatOf(SV.cond);$('bConds').textContent='Conditions'+(hc?' · +'+Math.round(hc*100)+'%':'');
+  const pg=SV.ghosts[SV.pbSeed];$('bGhost').textContent=pg?'Race PB ghost · '+fmt(pg.s):'';
+  $('mSub').classList.toggle('hide',m!=='n');$('bGhost').classList.toggle('hide',!pg);
   $('mStats').innerHTML=`<span>best <b>${fmt(SV.best)}</b></span><span>deepest <b>Ward ${SV.bestWard>=9&&SV.beyond?'∞':ROMAN[Math.min(8,SV.bestWard)]}</b></span><span class="e">✦ ${fmt(SV.embers)}</span>${SV.streak?`<span>streak <b>${SV.streak}d</b></span>`:''}`;
   missionsHTML($('mList'));
-  const cb=SV.pb.c&&SV.pb.c.s;$('b4k').textContent='4K Cut'+(cb?' · '+fmt(cb):'');
   $('bFiles').textContent='Files '+SV.files.length+'/27';
-  const hc=heatOf(SV.cond);$('bConds').textContent='Conditions'+(hc?' · +'+Math.round(hc*100)+'%':'');
-  $('bVigil').textContent='Vigil'+(SV.vigil.unb?' · '+SV.vigil.unb.toFixed(0)+'s':'');
   $('bRecs').textContent='Records '+SV.ach.length+'/'+ACH.length;
-  const pg=SV.ghosts[SV.pbSeed];$('bGhost').classList.toggle('hide',!pg);if(pg)$('bGhost').textContent='Race PB ghost · '+fmt(pg.s);
-  $('bMute').textContent='sound: '+(AU.on?'on':'off')+' [m]';
+  $('bMute').textContent='Sound '+(AU.on?'on':'off');
 }
+function setMode(k){SV.mode=k;save();AU.init();AU.click();menuHTML()}
+function setStart(i){if(i<0||i>Math.min(8,SV.bestWard))return;SV.startWard=i;save();AU.init();AU.click();menuHTML()}
+$('modes').addEventListener('click',e=>{const b=e.target.closest('[data-mode]');if(b)setMode(b.dataset.mode)});
+$('wmap').addEventListener('click',e=>{const b=e.target.closest('[data-w]');if(b)setStart(+b.dataset.w)});
+function beginSel(){const m=SV.mode||'n';startRun(m==='d'?{daily:1}:m==='c'?{cut:1}:m==='v'?{vigil:1}:{})}
 function shopHTML(){
   $('sEmb').textContent='✦ '+fmt(SV.embers);
   $('sList').innerHTML=SHOP.map(it=>{const l=SV.up[it.id],mx=it.cost.length,c=it.cost[l];
@@ -600,13 +640,10 @@ $('cList').addEventListener('click',e=>{const el=e.target.closest('[data-col]');
   if(SV.owned.includes(i))SV.col=i;else if(SV.embers>=c[2]){SV.embers-=c[2];SV.owned.push(i);SV.col=i;AU.init();AU.record()}else return;save();AU.click();shopHTML()});
 let shopFrom='menu';
 function openShop(from){shopFrom=from;if(from==='over')finalize();shopHTML();show('shop')}
-$('bPlay').onclick=()=>startRun();
-$('bDaily').onclick=()=>startRun({daily:1});
-$('b4k').onclick=()=>startRun({cut:1});
+$('bPlay').onclick=beginSel;
 $('bSeed').onclick=()=>{OV.lock=0;retry(1)};
 $('bFiles').onclick=()=>{filesHTML();show('files')};
 $('bGhost').onclick=()=>{const g=SV.ghosts[SV.pbSeed];if(g)startRun({seed:g.seed,fresh:1})};
-$('bVigil').onclick=()=>startRun({vigil:1});
 $('bEndV').onclick=endVigil;
 $('bConds').onclick=()=>{condsHTML();show('conds')};
 $('bCBack').onclick=()=>{menuHTML();show('menu')};
@@ -638,7 +675,6 @@ function filesHTML(){$('fCount').textContent=SV.files.length+' / 27 recovered';
 $('bShop').onclick=()=>openShop('menu');
 $('bShop2').onclick=()=>openShop('over');
 $('bBack').onclick=()=>{if(shopFrom==='over'){show('over');missionsHTML($('oMis'))}else{menuHTML();show('menu')}};
-$('bWard').onclick=()=>{SV.startWard=(Math.min(SV.startWard,SV.bestWard)+1)%(Math.min(8,SV.bestWard)+1);save();AU.init();AU.click();menuHTML()};
 $('bMute').onclick=()=>{SV.mute=AU.on;AU.mute(SV.mute);save();menuHTML()};
 $('bRetry').onclick=()=>{OV.lock=0;retry(0)};
 $('bMenu').onclick=toMenu;
@@ -688,7 +724,10 @@ addEventListener('keydown',e=>{
   if(S.paused&&S.mode==='play'){unpause();return}
   if(e.code==='KeyM'){SV.mute=AU.on;AU.mute(SV.mute);save();if(S.mode==='menu')menuHTML();return}
   const go=e.code==='Space'||e.code==='Enter';
-  if(S.mode==='menu'&&!$('menu').classList.contains('hide')&&go){e.preventDefault();startRun()}
+  if(S.mode==='menu'&&!$('menu').classList.contains('hide')&&!go){const ks=Object.keys(MODES),i=ks.indexOf(SV.mode||'n');
+    if(e.code==='ArrowLeft'||e.code==='ArrowRight'){setMode(ks[mod(i+(e.code==='ArrowRight'?1:-1),ks.length)]);return}
+    if((SV.mode||'n')==='n'&&(e.code==='ArrowUp'||e.code==='ArrowDown')){e.preventDefault();setStart(Math.min(SV.startWard,SV.bestWard)+(e.code==='ArrowUp'?1:-1));return}}
+  if(S.mode==='menu'&&!$('menu').classList.contains('hide')&&go){e.preventDefault();beginSel()}
   else if(S.mode==='over'&&go){e.preventDefault();if(!OV.final&&e.code==='Enter'&&!$('rev').classList.contains('hide'))revive();else{OV.lock=0;retry(0)}}
   else if(S.mode==='over'&&e.code==='KeyR'){OV.lock=0;retry(1)}
   else if(S.mode==='play'&&e.code==='KeyR'&&!S.paused)startRun({daily:S.daily,cut:S.cut,vigil:S.vigil,cond:S.cond});
@@ -736,7 +775,7 @@ function frame(now){
 function render(t){
   if(!gl)return;
   let n=0;
-  for(const w of S.walls){if(n>=MAXW)break;WA[n*4]=w.z;WA[n*4+1]=w.m;WA[n*4+2]=w.n;WA[n*4+3]=0;n++}
+  for(const w of S.walls){if(n>=MAXW)break;WA[n*4]=w.z;WA[n*4+1]=w.m;WA[n*4+2]=w.n;WA[n*4+3]=w.st&&S.stairs[w.st]?(S.stairs[w.st].clean?1:.4):0;n++}
   let m=0;
   for(const o of S.orbs){if(m>=MAXO||o.z<.4)continue;OA[m*4]=o.z;OA[m*4+1]=o.a;OA[m*4+2]=o.gold?1:0;OA[m*4+3]=o.alpha*Math.min(1,(SPAWN-o.z)/4);m++}
   gl.uniform2f(U.R,cv.width,cv.height);gl.uniform2f(U.uShk,S.shk[0],S.shk[1]);

@@ -18,6 +18,11 @@ One-button-pair tunnel survival. Carry a lantern down a raymarched-style polygon
 - **Embers ✦** — pickups between walls; gold ones sit at gap edges (risk).
 - **Wards I–IX** every 16 s: faster, more spin, new sector counts (5–8), new patterns, new key. Survive Ward Nine → endless *Beyond*.
 
+## Skipping wards
+- **Stairwells**: once per ward (from its 3rd pattern, in its first ~55%), a green striped spiral appears with a callout. Thread all 5–6 steps with no wall contact (no side slide, no shield/vigil hit) → drop straight to the next ward; bonus = skipped seconds' distance points × chain multiplier × express. Touch any step → "stairwell lost", express resets.
+- **Express**: skips in consecutive wards stack ×1.5, ×2, ×2.5… on the skip bonus; a ward finished normally resets it.
+- **Ward map** (menu): start at any ward you've reached, with a head start of half your best score at that ward entry (recorded from Ward I starts).
+
 ## Why these hooks (inferred from the kinds of games you build)
 | You build | Inference | Hook |
 |---|---|---|
