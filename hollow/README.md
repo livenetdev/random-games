@@ -1,6 +1,8 @@
 # Hollow
 
-1 KB atmospheric horror. `index.html` is ≤ 1024 bytes. ![lit](screenshot.png)
+1 KB atmospheric horror. `index.html` is ≤ 1024 bytes.
+
+![lit](screenshot.png)
 
 Open it in a desktop browser with WebGL2 (Chrome, Edge, Firefox 113+, Safari 16.4+). It works from `file://` too.
 
