@@ -92,6 +92,20 @@ button.big small{font-size:10px;opacity:.6;font-weight:400}
 .sw{width:44px;height:44px;border-radius:50%;border:2px solid #ffffff22;position:relative;cursor:pointer;display:flex;align-items:flex-end;justify-content:center;font-size:9px;padding-bottom:2px;color:#000;font-weight:700;text-shadow:0 0 3px #000,0 0 3px #000}
 .sw.eq{border-color:#fff;box-shadow:0 0 16px currentColor}
 .sw.lk{filter:grayscale(.8) brightness(.45)}
+#dlt{font-size:13px;font-weight:700;margin-top:4px;font-variant-numeric:tabular-nums;text-shadow:0 0 8px #000}
+.up{color:var(--ok);font-style:normal}.dn{color:var(--bad);font-style:normal}
+.card{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:#ffffff1a;border:1px solid #ffffff1a;font-variant-numeric:tabular-nums}
+.card>div{background:#050403e6;padding:6px 4px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.card i{font-style:normal;font-size:9px;letter-spacing:.14em;color:var(--dim);text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card b{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.spl{display:flex;flex-wrap:wrap;gap:4px 12px;justify-content:center;font-size:11px;color:var(--dim);margin-top:8px;font-variant-numeric:tabular-nums}
+.spl b{color:var(--fg);font-weight:400}
+.files{display:flex;flex-direction:column;gap:6px;text-align:left}
+.f{font-size:12px;line-height:1.45;padding:6px 10px;border-left:2px solid var(--acc);background:#0009}
+.f span{color:var(--acc);margin-right:8px;font-weight:700}
+.f.lk{border-left-color:#ffffff22;color:var(--dim)}.f.lk span{color:var(--dim)}
+.f.nw{border-left-color:var(--gold);animation:fin .8s ease-out}
+@keyframes fin{from{opacity:0;transform:translateX(-8px)}}
 #pause{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;font-size:14px;letter-spacing:.4em;background:#0008;text-transform:uppercase}
 #err{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:24px;text-align:center;color:var(--dim)}
 </style>
@@ -100,7 +114,7 @@ button.big small{font-size:10px;opacity:.6;font-weight:400}
 <canvas id="gl"></canvas>
 <canvas id="fx"></canvas>
 <div id="hud" class="hide">
-  <div id="hl"><div id="score">0</div><div id="mult">×1</div><div id="cbar"><i></i></div></div>
+  <div id="hl"><div id="score">0</div><div id="mult">×1</div><div id="dlt"></div><div id="cbar"><i></i></div></div>
   <div id="hc"><div id="wname"></div><div id="wbar"><i></i></div><div id="bbar"><i></i><b>BEST</b></div></div>
   <div id="hr"><div id="emb">✦ 0</div><div id="shd"></div></div>
 </div>
@@ -112,10 +126,11 @@ button.big small{font-size:10px;opacity:.6;font-weight:400}
   <div class="sub">carry the light down through the wards</div>
   <div id="mRank"></div>
   <button id="bPlay" class="big">Begin shift <small>[space]</small></button>
-  <div class="row"><button id="bWard"></button><button id="bDaily"></button><button id="bShop">Upgrades</button></div>
+  <div class="row"><button id="bWard"></button><button id="bDaily"></button><button id="b4k"></button></div>
+  <div class="row"><button id="bShop">Upgrades</button><button id="bFiles"></button></div>
   <div class="stats" id="mStats"></div>
   <div class="missions" id="mList"></div>
-  <div class="help">← → / A D · touch: hold left or right half · skim walls to graze</div>
+  <div class="help">← → / A D · touch: hold left or right half · skim walls to graze · R resets</div>
   <div class="row"><button id="bMute"></button></div>
 </div>
 
@@ -124,6 +139,8 @@ button.big small{font-size:10px;opacity:.6;font-weight:400}
   <div class="oscore" id="oScore">0</div>
   <div class="obest" id="oBest"></div>
   <div class="near" id="oNear"></div>
+  <div id="oCard"></div>
+  <div id="oFiles" class="files"></div>
   <div id="rev" class="hide"><p>THE DARK HESITATES</p><button id="bRev"></button><div class="cd" id="revCd"></div></div>
   <div id="oPost">
     <div class="rewards" id="oRew"></div>
@@ -131,7 +148,7 @@ button.big small{font-size:10px;opacity:.6;font-weight:400}
     <div class="missions" id="oMis" style="margin-top:12px"></div>
   </div>
   <button id="bRetry" class="big">Again <small>[space]</small></button>
-  <div class="row"><button id="bShop2">Upgrades</button><button id="bMenu">Menu</button></div>
+  <div class="row"><button id="bSeed">Same seed [R]</button><button id="bShop2">Upgrades</button><button id="bMenu">Menu</button></div>
 </div>
 
 <div id="shop" class="panel hide">
@@ -141,6 +158,12 @@ button.big small{font-size:10px;opacity:.6;font-weight:400}
   <div class="mh">lantern</div>
   <div class="cols" id="cList"></div>
   <button id="bBack">Back</button>
+</div>
+<div id="files" class="panel hide">
+  <div class="title" style="font-size:32px">CASE FILES</div>
+  <div class="sub" id="fCount"></div>
+  <div class="files" id="fList"></div>
+  <button id="bFBack">Back</button>
 </div>
 <div id="pause" class="hide">paused · press to resume</div>
 <script>

@@ -18,6 +18,13 @@ One-button-pair tunnel survival. Carry a lantern down a raymarched-style polygon
 - **Embers ✦** — pickups between walls; gold ones sit at gap edges (risk).
 - **Wards I–IX** every 16 s: faster, more spin, new sector counts (5–8), new patterns, new key. Survive Ward Nine → endless *Beyond*.
 
+## Built for you
+- **Splits + live Δ vs PB**: score curve of your best run is stored; HUD shows live ±, each ward banner shows split delta.
+- **Dense death card**: time, pts/s, graze rate, ×3+ uptime, turn°/wall (input economy), hairline (closest graze, PB-tracked), splits, seed.
+- **4K CUT mode**: 4,096 steering ticks (2 per frame held); grazes +48, embers +64, gold +256. Separate PB.
+- **Seeds**: `R` on death = same seed; `R` mid-run = instant reset.
+- **Case files**: 27 one-line dossiers (3 per ward: reach / graze 12 inside / gold ember), loop-shaped story.
+
 ## Meta
 - 3 rotating missions (tiers scale up), rank/XP with ember payouts, daily streak bonus.
 - Daily seeded run (`Daily #N`) with its own best.

@@ -14,7 +14,7 @@ const vib=p=>{try{navigator.vibrate&&navigator.vibrate(p)}catch(e){}};
 
 // ---------------------------------------------------------------- save
 const SKEY='nightshift.v1';
-const defSave=()=>({best:0,bestWard:0,runs:0,embers:0,xp:0,lvl:1,up:{mag:0,kin:0,sh:0,grz:0},col:0,owned:[0],missions:[],mtier:{},grazeTotal:0,streak:0,lastDay:'',startWard:0,mute:false,daily:{},beyond:false});
+const defSave=()=>({best:0,bestWard:0,runs:0,embers:0,xp:0,lvl:1,up:{mag:0,kin:0,sh:0,grz:0},col:0,owned:[0],missions:[],mtier:{},grazeTotal:0,streak:0,lastDay:'',startWard:0,mute:false,daily:{},beyond:false,pb:{},files:[],hairBest:9});
 let SV=defSave();
 try{const j=JSON.parse(localStorage.getItem(SKEY));if(j&&typeof j==='object')SV=Object.assign(defSave(),j,{up:Object.assign(defSave().up,j.up||{})})}catch(e){}
 const save=()=>{try{localStorage.setItem(SKEY,JSON.stringify(SV))}catch(e){}};
@@ -51,6 +51,42 @@ const PAT={
 };
 const POOL=[['gate','twin','pinch','gate'],['gate','twin','pinch','comb','half'],['gate','comb','half','spiral','twin','pinch'],
             ['gate','comb','half','spiral','rail','twin'],['comb','half','spiral','rail','cage','gate','twin']];
+const FILES=[
+'INTAKE 23:58. One porter on shift. One lamp signed out. Lamp not returned since.',
+'Corridors were surveyed at 40 m. Night staff log 400. Nobody has walked back to check.',
+'Embers are what is left when the lamp touches something it should not. Keep them. They remember warmth.',
+'Hall lights fail in sequence, far end first. Staff call it "the walk". It is walking toward you.',
+'Scorch marks on the panels at hip height. Same height as a lamp held low.',
+'Memo: do not run. Running lengthens the hall. Walk at the speed of the music.',
+'Eight-sided rooms leave no corner to hide in. That was the point. Whose point is unclear.',
+'Patient 0819 asked for the lights on. Request logged. Request is still being processed.',
+'The red lamp at the end of every hall is not an exit sign. Exit signs are green.',
+'Pressure gauges read in years, not bar. Needle at 38.',
+'Something down here feeds on spin. The walls turn faster when you look away.',
+'Scratched into a pipe: "it cannot take the flame, only the hand holding it."',
+'Five pews, five walls, five names on the board. Four crossed out in your handwriting.',
+'The organ plays the same bassline as the corridor. It started first.',
+'Votive candles here burn downward, into the floor.',
+'Drawer tags list time of death as "during shift". Every one.',
+'Cold air moves toward the lamp, not away. Moths do the same.',
+'One drawer is warm. Do not file a report about the warm drawer.',
+'Your personnel file is thicker than the building. Most pages are graze reports.',
+'Shift length field: 16 s. Repeated on every page. "Typo," says a sticky note, in red.',
+'Last page: "Retain porter. Porter does not know. Porter keeps coming back."',
+'There is no sky. The roof continues down.',
+'Seven antennas broadcast one word on a loop: again.',
+'From up here the red lamp below looks exactly like yours.',
+'Ward Nine has one bed, made, still warm. Name card blank.',
+'The red lamp is carried by someone walking up. Same gait. Same shift.',
+'Handover complete. Lamp signed back in. A new porter signs it out. 23:58.'];
+const FCOND=[w=>'reach Ward '+w,w=>'graze 12 inside Ward '+w+' in one shift',w=>'catch a gold ember in Ward '+w];
+function unlock(w,k){
+  if(w>8||S.mode!=='play')return;const id=w*3+k;if(SV.files.includes(id))return;
+  SV.files.push(id);save();S.newFiles.push(id);toast('▤ FILE '+ROMAN[w]+'-'+(k+1)+' recovered');AU.file();
+}
+const pbKey=()=>S.cut?'c':S.daily?'d'+today():'n';
+const bestFor=()=>S.cut?((SV.pb.c&&SV.pb.c.s)||0):S.daily?(SV.daily[today()]||0):SV.best;
+const sgn=d=>(d>=0?'+':'−')+fmt(Math.abs(d));
 const RANKS=['Visitor','Patient','Orderly','Nurse','Resident','Surgeon','Chief','Night Warden','The Ninth'];
 const rankName=l=>RANKS[Math.min(RANKS.length-1,Math.floor((l-1)/4))];
 const xpNeed=l=>Math.floor(900*Math.pow(l,1.35));
@@ -142,6 +178,7 @@ const AU={c:null,on:!SV.mute,nb:0,beat:0,bq:[],
   death(){if(!this.c)return;const t=this.c.currentTime;this.noise(.7,.5,t,'lowpass',1400);this.tone(220,.9,'sawtooth',.18,t,30);this.tone(80,.6,'sine',.6,t,25)},
   shield(){this.noise(.4,.3,0,'highpass',3000,1,1);this.tone(1400,.4,'sine',.1,0,300,1)},
   mission(){if(!this.c)return;const t=this.c.currentTime;this.tone(880,.12,'square',.05,t,0,1);this.tone(1318,.25,'square',.05,t+.09,0,1)},
+  file(){if(!this.c)return;const t=this.c.currentTime;this.tone(220,1.2,'sine',.12,t,0,1);this.tone(233,1.2,'sine',.08,t,0,1);this.noise(.8,.05,t,'bandpass',900,6,1)},
   click(){this.tone(1200,.03,'square',.03)},
 };
 const WROOT=[0,3,-2,5,1,7,-4,2,6];
@@ -179,23 +216,25 @@ const WA=new Float32Array(MAXW*4),OA=new Float32Array(MAXO*4);
 let S={mode:'menu',ward:0,walls:[],orbs:[],t:0,spin:0,th:-Math.PI/2,travel:0,sides:6,hue:.58,pulse:0,flash:0,shake:0,grz:0,death:0,dim:.55,ab:0,inv:0,shield:0,v:3};
 const K={l:0,r:0},ptr=new Map();
 
-function startRun(daily){
-  AU.init();ensureMissions();
-  const sw=daily?0:Math.min(SV.startWard,SV.bestWard);
-  const seed=daily?parseInt(today().replace(/-/g,''),10):(Math.random()*1e9|0);
+function startRun(o){
+  o=o||{};AU.init();ensureMissions();
+  const daily=!!o.daily,cut=!!o.cut;
+  const sw=daily||cut?0:Math.min(SV.startWard,SV.bestWard);
+  const seed=o.seed!=null?o.seed:daily?parseInt(today().replace(/-/g,''),10):(Math.random()*4294967296>>>0);
   const P=wardP(sw);
-  S={mode:'play',daily,sw,genR:mulberry32(seed),spinR:mulberry32(seed^0x5bd1e995),
+  S={mode:'play',daily,cut,seed,sw,budget:4096,earned:0,rotTot:0,passed:0,hair:9,hiT:0,curve:[0],splits:{[sw]:0},wg:{},newFiles:[],genR:mulberry32(seed),spinR:mulberry32(seed^0x5bd1e995),
     t:sw*WL,t0:sw*WL,ward:sw,maxWard:sw,genWard:sw,genP:P,v:P.v,q:[],prev:null,lastZ:13,
     walls:[],orbs:[],th:-Math.PI/2,spin:0,spinV:0,spinDir:1,spinFlip:3,travel:S.travel||0,
-    score:0,combo:0,comboT:0,mult:1,maxMult:1,grazes:0,emb:0,embF:0,shield:SV.up.sh,inv:0,revives:0,
+    score:0,combo:0,comboT:0,mult:1,maxMult:1,grazes:0,emb:0,embF:0,shield:cut?0:SV.up.sh,inv:0,revives:0,
     sides:P.n,sidesT:P.n,hue:S.hue,pulse:0,flash:.6,shake:0,grz:0,death:0,dim:1,ab:0,recorded:false,deathT:0,ts:1,beatT:0,
     liveDone:{},hudScore:-1,hudEmb:-1};
   K.l=K.r=0;ptr.clear();
   AU.beat=0;AU.bq=[];if(AU.c)AU.nb=AU.c.currentTime+.05;
   AU.drone(.1,WROOT[sw%9]);
+  const pb=SV.pb[pbKey()];S.pb=sw===0&&pb&&pb.c?pb:null;
   show('hud');
-  banner('WARD '+P.num,P.name,P.hue);
-  hudStatic();
+  if(cut)banner('4K CUT','4,096 ticks of steering · grazes refund',P.hue,1);else banner('WARD '+P.num,P.name,P.hue);
+  hudStatic();unlock(sw,0);
 }
 
 function fillQ(){
@@ -259,10 +298,10 @@ function update(dt){
   spawn();
   // steering, blocked sideways by walls beside you
   const inp=(K.r||[...ptr.values()].some(v=>v>0)?1:0)-(K.l||[...ptr.values()].some(v=>v<0)?1:0);
-  if(inp){
+  if(inp&&(!S.cut||S.budget>0)){
     const nt=S.th-inp*OMEGA*dt;let ok=true;
     for(const w of S.walls)if(overl(w)&&filled(w,nt)&&!filled(w,S.th)){ok=false;break}
-    if(ok)S.th=nt;
+    if(ok){S.th=nt;S.rotTot+=OMEGA*dt;if(S.cut)S.budget=Math.max(0,S.budget-dt*120)}
   }
   S.inv-=dt;
   for(let i=0;i<S.walls.length;i++){
@@ -273,7 +312,7 @@ function update(dt){
         die();return;
       }
       w.minD=Math.min(w.minD,edgeD(w,S.th));
-    }else if(!w.passed&&w.z+WT<ZP){w.passed=true;if(w.minD<GRAZE)graze()}
+    }else if(!w.passed&&w.z+WT<ZP){w.passed=true;S.passed++;if(w.minD<GRAZE){S.hair=Math.min(S.hair,w.minD);graze()}}
   }
   S.walls=S.walls.filter(w=>w.z+WT>.25);
   const pr=.28+.1*SV.up.mag;
@@ -285,7 +324,9 @@ function update(dt){
   S.comboT-=dt;
   if(S.comboT<=0&&S.combo>0){S.combo=0;setMult()}
   S.score+=S.v*dt*5*S.mult;
-  if(!S.recorded&&!S.daily&&SV.best>0&&S.score>SV.best){S.recorded=true;banner('NEW RECORD','keep going',.12,1);AU.record();vib(30)}
+  if(S.mult>=3)S.hiT+=dt;
+  while(S.curve.length<=Math.floor(S.t-S.t0))S.curve.push(Math.floor(S.score));
+  if(!S.recorded&&bestFor()>0&&S.score>bestFor()){S.recorded=true;banner('NEW RECORD','keep going',.12,1);AU.record();vib(30)}
   liveMissions();
 }
 const comboMax=()=>2.6+.5*SV.up.grz;
@@ -298,6 +339,8 @@ function setMult(){
 function graze(){
   S.grazes++;S.combo++;S.comboT=comboMax();setMult();
   S.score+=25*S.mult;S.grz=1;
+  S.wg[S.ward]=(S.wg[S.ward]||0)+1;if(S.wg[S.ward]>=12)unlock(S.ward,1);
+  if(S.cut){S.budget+=48;S.earned+=48}
   AU.graze(S.combo);vib(6);
   const p=proj(ZP,S.th,.05);burst(p[0],p[1],10,'#fff1d0',260,.35,2.5);
   ftext(p[0]+(Math.random()-.5)*30,p[1]-22,'+'+25*S.mult,'#fff1d0',13);
@@ -307,6 +350,8 @@ function collect(o){
   S.embF+=v;S.emb=Math.floor(S.embF);
   S.combo++;S.comboT=comboMax();setMult();
   S.score+=(o.gold?60:12)*S.mult;
+  if(S.cut){const b=o.gold?256:64;S.budget+=b;S.earned+=b}
+  if(o.gold)unlock(S.ward,2);
   AU.ember(o.gold);vib(o.gold?18:8);
   const p=proj(o.z,o.a,.16);burst(p[0],p[1],o.gold?26:12,o.gold?'#ffd86a':'#ff8a2a',o.gold?380:220,.5,3);
   if(o.gold)ftext(p[0],p[1]-26,'+5 ✦','#ffd86a',18);
@@ -324,12 +369,15 @@ function die(){
 }
 function onWard(){
   const P=wardP(S.ward);
-  S.maxWard=Math.max(S.maxWard,S.ward);S.sidesT=P.n;S.flash=.45;S.pulse=1.5;
+  S.maxWard=Math.max(S.maxWard,S.ward);S.sidesT=P.n;
+  const sp=Math.floor(S.score);S.splits[S.ward]=sp;
+  const ref=S.pb&&S.pb.sp&&S.pb.sp[S.ward],dl=ref!=null?'  ·  '+sgn(sp-ref)+' vs PB':'';
+  unlock(S.ward,0);S.flash=.45;S.pulse=1.5;
   AU.ward();AU.drone(.1,WROOT[S.ward%9]);vib(25);
   if(S.ward===9){
-    banner('SHIFT SURVIVED','you walked out of Ward Nine',.13);
+    banner('SHIFT SURVIVED','you walked out of Ward Nine'+dl,.13);
     if(!SV.beyond){SV.beyond=true;SV.embers+=150;save();toast('Escaped Ward Nine · +150 ✦')}
-  }else banner('WARD '+P.num,P.name,P.hue);
+  }else banner('WARD '+P.num,P.name+dl,P.hue);
   hudStatic();
 }
 function stats(){
@@ -348,10 +396,12 @@ let OV={};
 const reviveCost=()=>25+8*S.ward;
 function endRun(){
   S.mode='over';
-  const sc=Math.floor(S.score),prev=S.daily?(SV.daily[today()]||0):SV.best;
+  const sc=Math.floor(S.score),prev=bestFor();
   OV={sc,prev,newBest:sc>prev,final:false,lock:performance.now()+450};
   show('over');
-  $('oTitle').textContent=S.daily?'daily #'+dayNo()+' · the light goes out':'the light goes out';
+  $('oTitle').textContent=(S.cut?'4k cut · ':S.daily?'daily #'+dayNo()+' · ':'')+'the light goes out';
+  $('oCard').innerHTML=cardHTML(sc,prev);
+  $('oFiles').innerHTML=S.newFiles.map(id=>`<div class="f nw"><span>${ROMAN[id/3|0]}-${id%3+1}</span>${FILES[id]}</div>`).join('');
   countUp($('oScore'),sc);
   const ob=$('oBest');
   if(OV.newBest&&prev>0){ob.textContent='new best · +'+fmt(sc-prev);ob.className='obest nb'}
@@ -363,7 +413,7 @@ function endRun(){
   for(const m of SV.missions){if(m.done)continue;const T=MT[m.id],v=T.run?st[T.st]:m.p+st[T.st];
     if(v<m.n&&v>=m.n*.7){near.push('almost: '+T.t(m.n).toLowerCase()+' ('+Math.floor(v)+'/'+m.n+')');break}}
   $('oNear').innerHTML=near.slice(0,2).map(t=>'<div>'+t+'</div>').join('');
-  const can=!S.daily&&S.revives<1&&SV.embers+S.emb>=reviveCost()&&(sc>=prev*.5||S.ward>=SV.bestWard);
+  const can=!S.daily&&!S.cut&&S.revives<1&&SV.embers+S.emb>=reviveCost()&&(sc>=prev*.5||S.ward>=SV.bestWard);
   $('oPost').classList.add('hide');
   if(can){
     $('rev').classList.remove('hide');$('bRev').textContent='Keep the light · '+reviveCost()+' ✦';
@@ -384,7 +434,13 @@ function finalize(){
   $('rev').classList.add('hide');$('oPost').classList.remove('hide');
   const st=stats(),rew=[];
   SV.runs++;SV.grazeTotal+=S.grazes;
-  if(S.daily){if(OV.newBest)SV.daily[today()]=OV.sc}else if(OV.newBest)SV.best=OV.sc;
+  if(OV.newBest){
+    if(S.daily)SV.daily[today()]=OV.sc;else if(!S.cut)SV.best=OV.sc;
+    if(S.sw===0||S.cut)SV.pb[pbKey()]={s:OV.sc,c:S.curve,sp:S.splits};
+    else if(S.cut)SV.pb.c={s:OV.sc};
+  }
+  for(const k in SV.pb)if(k[0]==='d'&&k!=='d'+today())delete SV.pb[k];
+  if(S.hair<SV.hairBest)SV.hairBest=S.hair;
   SV.bestWard=Math.max(SV.bestWard,Math.min(S.maxWard,9));
   if(S.emb)rew.push('+'+S.emb+' ✦ embers');
   let earned=S.emb;
@@ -405,11 +461,24 @@ function finalize(){
   missionsHTML($('oMis'));
   if(OV.newBest)setTimeout(()=>AU.record(),300);
 }
-function retry(){if(S.mode!=='over'||performance.now()<OV.lock)return;finalize();startRun(S.daily)}
+function retry(same){if(S.mode!=='over'||performance.now()<OV.lock)return;finalize();startRun({daily:S.daily,cut:S.cut,seed:same?S.seed:null})}
+function cardHTML(sc,prev){
+  const rt=Math.max(.1,S.t-S.t0),deg=r=>(r*180/Math.PI).toFixed(1)+'°';
+  const c=[['time',rt.toFixed(1)+'s'],['pts/s',fmt(sc/rt)],['grazes',S.grazes+' · '+Math.round(S.grazes/rt*60)+'/m'],['embers',S.emb],
+    ...(S.cut?[['ticks left',Math.floor(S.budget)],['ticks earned','+'+S.earned]]:[['max mult','×'+S.maxMult],['×3+ uptime',Math.round(S.hiT/rt*100)+'%']]),['turn/wall',S.passed?Math.round(S.rotTot/S.passed*180/Math.PI)+'°':'—'],
+    ['hairline',S.hair<9?deg(S.hair)+(S.hair<SV.hairBest?' <em class="up">PB</em>':''):'—']];
+  let h='<div class="card">'+c.map(x=>`<div><i>${x[0]}</i><b>${x[1]}</b></div>`).join('')+'</div>';
+  const ws=Object.keys(S.splits).map(Number).sort((a,b)=>a-b);
+  if(ws.length>1||S.pb){const ps=S.pb&&S.pb.sp||{};
+    h+='<div class="spl">'+ws.map(w=>{const r=ps[w];return`<span>${w>8?'∞':ROMAN[w]} <b>${fmt(S.splits[w])}</b>${r!=null&&w!==S.sw?` <em class="${S.splits[w]>=r?'up':'dn'}">${sgn(S.splits[w]-r)}</em>`:''}</span>`}).join('')
+      +`<span>end <b>${fmt(sc)}</b>${prev?` <em class="${sc>=prev?'up':'dn'}">${sgn(sc-prev)}</em>`:''}</span></div>`}
+  h+=`<div class="spl"><span>seed <b>${S.daily?'daily #'+dayNo():(S.seed>>>0).toString(16).toUpperCase().padStart(8,'0')}</b></span></div>`;
+  return h;
+}
 function toMenu(){if(S.mode==='over')finalize();S.mode='menu';S.walls=[];S.orbs=[];S.death=0;S.dim=.55;AU.drone(.05);menuHTML();show('menu')}
 
 // ---------------------------------------------------------------- ui
-const panels=['menu','over','shop','hud'];
+const panels=['menu','over','shop','hud','files'];
 function show(id){for(const p of panels)$(p).classList.toggle('hide',p!==id);$('pause').classList.add('hide')}
 function banner(a,b,h,small){
   const e=$('banner');e.querySelector('.b1').textContent=a;e.querySelector('.b2').textContent=b||'';
@@ -439,6 +508,8 @@ function menuHTML(){
   $('bDaily').textContent='Daily #'+dayNo()+(db?' · '+fmt(db):'');
   $('mStats').innerHTML=`<span>best <b>${fmt(SV.best)}</b></span><span>deepest <b>Ward ${SV.bestWard>=9&&SV.beyond?'∞':ROMAN[Math.min(8,SV.bestWard)]}</b></span><span class="e">✦ ${fmt(SV.embers)}</span>${SV.streak?`<span>streak <b>${SV.streak}d</b></span>`:''}`;
   missionsHTML($('mList'));
+  const cb=SV.pb.c&&SV.pb.c.s;$('b4k').textContent='4K Cut'+(cb?' · '+fmt(cb):'');
+  $('bFiles').textContent='Files '+SV.files.length+'/27';
   $('bMute').textContent='sound: '+(AU.on?'on':'off')+' [m]';
 }
 function shopHTML(){
@@ -454,28 +525,38 @@ $('cList').addEventListener('click',e=>{const el=e.target.closest('[data-col]');
   if(SV.owned.includes(i))SV.col=i;else if(SV.embers>=c[2]){SV.embers-=c[2];SV.owned.push(i);SV.col=i;AU.init();AU.record()}else return;save();AU.click();shopHTML()});
 let shopFrom='menu';
 function openShop(from){shopFrom=from;if(from==='over')finalize();shopHTML();show('shop')}
-$('bPlay').onclick=()=>startRun(false);
-$('bDaily').onclick=()=>startRun(true);
+$('bPlay').onclick=()=>startRun();
+$('bDaily').onclick=()=>startRun({daily:1});
+$('b4k').onclick=()=>startRun({cut:1});
+$('bSeed').onclick=()=>{OV.lock=0;retry(1)};
+$('bFiles').onclick=()=>{filesHTML();show('files')};
+$('bFBack').onclick=()=>{menuHTML();show('menu')};
+function filesHTML(){$('fCount').textContent=SV.files.length+' / 27 recovered';
+  $('fList').innerHTML=WARDS.map((w,i)=>`<div class="mh">Ward ${ROMAN[i]} · ${w[0]}</div>`+[0,1,2].map(k=>{const id=i*3+k,on=SV.files.includes(id);
+    return`<div class="f${on?'':' lk'}"><span>${ROMAN[i]}-${k+1}</span>${on?FILES[id]:'▒▒▒ '+FCOND[k](ROMAN[i])}</div>`}).join('')).join('')}
 $('bShop').onclick=()=>openShop('menu');
 $('bShop2').onclick=()=>openShop('over');
 $('bBack').onclick=()=>{if(shopFrom==='over'){show('over');missionsHTML($('oMis'))}else{menuHTML();show('menu')}};
 $('bWard').onclick=()=>{SV.startWard=(Math.min(SV.startWard,SV.bestWard)+1)%(Math.min(8,SV.bestWard)+1);save();AU.init();AU.click();menuHTML()};
 $('bMute').onclick=()=>{SV.mute=AU.on;AU.mute(SV.mute);save();menuHTML()};
-$('bRetry').onclick=()=>{OV.lock=0;retry()};
+$('bRetry').onclick=()=>{OV.lock=0;retry(0)};
 $('bMenu').onclick=toMenu;
 $('bRev').onclick=revive;
 $('over').addEventListener('pointerdown',e=>{if(e.target===$('over')||e.target.closest('.oscore,.obest,.near,#oPost'))retry()});
-function hudStatic(){const P=wardP(S.ward);$('wname').textContent='Ward '+P.num+' · '+P.name;$('bbar').style.display=(!S.daily&&SV.best>0)||(S.daily&&SV.daily[today()])?'':'none'}
+function hudStatic(){const P=wardP(S.ward);$('wname').textContent='Ward '+P.num+' · '+P.name;$('bbar').style.display=bestFor()>0?'':'none'}
 function hud(){
   const sc=Math.floor(S.score);
   if(sc!==S.hudScore){S.hudScore=sc;$('score').textContent=fmt(sc)}
   $('mult').textContent='×'+S.mult;
   $('cbar').firstChild.style.width=(S.combo?clamp(S.comboT/comboMax(),0,1)*100:0)+'%';
   $('wbar').firstChild.style.width=(S.ward>=9?100:mod(S.t,WL)/WL*100)+'%';
-  const best=S.daily?(SV.daily[today()]||0):SV.best;
+  const best=bestFor();
+  const de=$('dlt');
+  if(S.pb){const i=Math.floor(S.t-S.t0),ref=i<S.pb.c.length?S.pb.c[i]:S.pb.s,d=sc-ref;de.textContent=sgn(d);de.className=d>=0?'up':'dn'}else de.textContent='';
   if(best)$('bbar').firstChild.style.width=Math.min(1,sc/best)*100+'%';
   if(S.emb!==S.hudEmb){S.hudEmb=S.emb;$('emb').textContent='✦ '+S.emb}
-  $('shd').textContent=S.shield>0?'◈'.repeat(S.shield)+' last light':'';
+  $('shd').textContent=S.cut?(S.budget>0?Math.floor(S.budget)+' ticks':'BUDGET SPENT'):S.shield>0?'◈'.repeat(S.shield)+' last light':'';
+  $('shd').className=S.cut&&S.budget<512?'dn':'';
 }
 
 // ---------------------------------------------------------------- fx overlay
@@ -505,9 +586,10 @@ addEventListener('keydown',e=>{
   if(S.paused&&S.mode==='play'){unpause();return}
   if(e.code==='KeyM'){SV.mute=AU.on;AU.mute(SV.mute);save();if(S.mode==='menu')menuHTML();return}
   const go=e.code==='Space'||e.code==='Enter';
-  if(S.mode==='menu'&&!$('menu').classList.contains('hide')&&go){e.preventDefault();startRun(false)}
-  else if(S.mode==='over'&&go){e.preventDefault();if(!OV.final&&e.code==='Enter'&&!$('rev').classList.contains('hide'))revive();else{OV.lock=0;retry()}}
-  else if(S.mode==='over'&&e.code==='KeyR')revive();
+  if(S.mode==='menu'&&!$('menu').classList.contains('hide')&&go){e.preventDefault();startRun()}
+  else if(S.mode==='over'&&go){e.preventDefault();if(!OV.final&&e.code==='Enter'&&!$('rev').classList.contains('hide'))revive();else{OV.lock=0;retry(0)}}
+  else if(S.mode==='over'&&e.code==='KeyR'){OV.lock=0;retry(1)}
+  else if(S.mode==='play'&&e.code==='KeyR'&&!S.paused)startRun({daily:S.daily,cut:S.cut});
   else if(S.mode==='over'&&e.code==='Escape')toMenu();
   else if(S.mode==='play'&&(e.code==='Escape'||e.code==='KeyP'))pause();
   if(e.code.startsWith('Arrow')||e.code==='Space')e.preventDefault();
