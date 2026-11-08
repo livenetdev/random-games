@@ -115,10 +115,13 @@ button.big small{font-size:10px;opacity:.6;font-weight:400}
 .hist th{color:var(--dim);font-weight:400;letter-spacing:.12em;text-transform:uppercase;font-size:9px;padding:4px}
 .hist td{padding:4px;border-top:1px solid #ffffff12;white-space:nowrap}
 .hist button{padding:2px 8px;font-size:10px}
-.reels{display:flex;gap:10px;justify-content:center}
-.reel{width:76px;height:96px;display:flex;align-items:center;justify-content:center;font-size:44px;border:1px solid var(--acc);background:#0b0805;color:var(--acc);box-shadow:inset 0 0 24px #000,0 0 18px #ffb35c22}
-.reel.spin{color:var(--dim);filter:blur(1px)}
-.paytab{display:flex;flex-wrap:wrap;gap:4px 14px;justify-content:center;font-size:11px;color:var(--dim)}
+.cds{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.cd{display:flex;flex-direction:column;gap:2px;text-align:left;text-transform:none;letter-spacing:.02em;padding:8px 10px;min-width:0}
+.cd b{letter-spacing:.12em;text-transform:uppercase;font-size:12px}.cd span{font-size:11px;color:var(--dim)}.cd em{font-style:normal;color:var(--acc);font-size:11px}
+.cd.on{border-color:var(--acc);background:#ffb35c1a;box-shadow:inset 0 0 18px #ffb35c18}
+#codeIn{flex:2 1 0;min-width:0;font:inherit;font-size:13px;color:var(--fg);background:#0009;border:1px solid #ffffff2a;padding:10px;letter-spacing:.08em;text-transform:uppercase}
+#codeIn:focus,button:focus-visible{outline:1px solid var(--acc);outline-offset:2px}
+button.mini{padding:1px 6px;font-size:9px;margin-left:6px}
 #pause{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;font-size:14px;letter-spacing:.4em;background:#0008;text-transform:uppercase}
 #err{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:24px;text-align:center;color:var(--dim)}
 </style>
@@ -141,10 +144,11 @@ button.big small{font-size:10px;opacity:.6;font-weight:400}
   <button id="bPlay" class="big">Begin shift <small>[space]</small></button>
   <div class="row"><button id="bWard"></button><button id="bDaily"></button><button id="b4k"></button></div>
   <button id="bGhost" class="hide"></button>
-  <div class="row"><button id="bShop">Upgrades</button><button id="bFiles"></button><button id="bRecs"></button><button id="bSlots">Slots</button></div>
+  <div class="row"><button id="bVigil"></button><button id="bConds"></button></div>
+  <div class="row"><button id="bShop">Upgrades</button><button id="bFiles"></button><button id="bRecs"></button></div>
   <div class="stats" id="mStats"></div>
   <div class="missions" id="mList"></div>
-  <div class="help">← → / A D · touch: hold left or right half · Shift / 2nd finger drifts: charge, release for mini-turbo · R resets</div>
+  <div class="help">← → / A D · touch: hold left or right half · hold Shift / a 2nd finger to cup the flame (slower turns, heat builds near walls), release to flare · R resets</div>
   <div class="row"><button id="bMute"></button></div>
 </div>
 
@@ -188,16 +192,18 @@ button.big small{font-size:10px;opacity:.6;font-weight:400}
   <div class="hist" id="rHist"></div>
   <button id="bRBack">Back</button>
 </div>
-<div id="slots" class="panel hide">
-  <div class="title" style="font-size:32px">NIGHT SLOTS</div>
-  <div class="stats"><span class="e" id="slEmb"></span></div>
-  <div class="reels"><div class="reel">☾</div><div class="reel">✦</div><div class="reel">◆</div></div>
-  <div class="near" id="slMsg"></div>
-  <button id="bPull" class="big">Pull · 10 ✦ <small>[space]</small></button>
-  <div class="paytab"><span>◆◆◆ 300</span><span>✕✕✕ 100</span><span>✦✦✦ 60</span><span>☾☾☾ 40</span><span>any pair (not ✕) 10</span></div>
-  <button id="bSBack">Back</button>
+<div id="conds" class="panel hide">
+  <div class="title" style="font-size:32px">CONDITIONS</div>
+  <div class="sub">stack rules for a higher score multiplier</div>
+  <div class="stats" id="cHeat"></div>
+  <div class="cds" id="cList2"></div>
+  <button id="bCPlay" class="big">Begin shift</button>
+  <div class="mh">play a code</div>
+  <div class="row"><input id="codeIn" placeholder="NS-1A2B3C4D-0" aria-label="Shift code" autocomplete="off" spellcheck="false"><button id="bCode">Play</button></div>
+  <div class="help" id="codeMsg">codes carry the seed and conditions; copy one from a death screen</div>
+  <button id="bCBack">Back</button>
 </div>
-<div id="pause" class="hide">paused · press to resume</div>
+<div id="pause" class="hide"><div style="display:flex;flex-direction:column;gap:14px;align-items:center">paused · press to resume<button id="bEndV" class="hide">End vigil [E]</button></div></div>
 <script>
 /*GAME*/
 </script>

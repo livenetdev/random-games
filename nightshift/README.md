@@ -18,12 +18,13 @@ One-button-pair tunnel survival. Carry a lantern down a raymarched-style polygon
 - **Embers ✦** — pickups between walls; gold ones sit at gap edges (risk).
 - **Wards I–IX** every 16 s: faster, more spin, new sector counts (5–8), new patterns, new key. Survive Ward Nine → endless *Beyond*.
 
-## From your other projects
-| Source | Trait | In NIGHTSHIFT |
+## Why these hooks (inferred from the kinds of games you build)
+| You build | Inference | Hook |
 |---|---|---|
-| dariokuigi (Kinoko MKWii) | frame-exact sim, drift, ghosts | fixed 60 Hz deterministic tick; **drift** (Shift/Space/2nd finger: 72% turn, charges blue → orange sparks faster near walls, release = mini-turbo: +2/+4 chain, score burst); **ghost lantern** per seed (daily, PB seed, past seeds) |
-| Lull (tetris) | banked currency, chain ×, achievements, past boards | chain counter in HUD; 16 achievements paying ✦; Records: lifetime stats + last 25 shifts with ▶ replay-seed |
-| stickrpg | casino, economy | **Night Slots**: 10 ✦ pull, 3 reels, RTP < 1 (ember sink) |
+| systems-deep sims and sandboxes | you enjoy composing rules and seeing them interact | **Conditions**: 7 stackable rules (Brittle, Blackout, Vertigo, Overtime, Mirror, Short fuse, Barren), each adds heat → score multiplier |
+| faithful, frame-exact engines | mastery of a precise feel; determinism matters | fixed 60 Hz tick, ghost lantern per seed+conditions; **flare**: cup the flame (Shift / 2nd finger) to turn slower and build heat near walls, release for a chain + score burst |
+| calm, interruptible play | low-stakes sessions between work | **Vigil**: no death; hits gutter the flame (combo reset), best = longest unbroken stretch; softer music; end any time (E) |
+| tools you tinker with and share | builders like making and trading challenges | **Codes** `NS-<seed>-<conditions>`: copy from any death screen, paste in Conditions, replay from Records |
 
 ## Built for you
 - **Splits + live Δ vs PB**: score curve of your best run is stored; HUD shows live ±, each ward banner shows split delta.

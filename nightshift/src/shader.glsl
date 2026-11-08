@@ -2,7 +2,7 @@
 precision highp float;
 precision highp int;
 uniform vec2 R,uShk;
-uniform float uGA,uGV,T,uSpin,uPA,uSides,uTrav,uPulse,uFlash,uDeath,uAb,uHue,uShield,uGrz,uDim,uInv;
+uniform float uFog,uGA,uGV,T,uSpin,uPA,uSides,uTrav,uPulse,uFlash,uDeath,uAb,uHue,uShield,uGrz,uDim,uInv;
 uniform vec3 uPC;
 uniform vec4 uW[28];
 uniform int uWN;
@@ -41,7 +41,7 @@ vec3 scene(vec2 p){
   vec3 base=pal(uHue);
   float fl=.92+.08*sin(T*31.)*sin(T*7.3);
   float da=abs(mod(a-uPA+TAU*.5,TAU)-TAU*.5);
-  float L=fl*1.7/(1.+1.6*(d-ZP)*(d-ZP))*(.3+.7*exp(-da*da*1.1));
+  float L=fl*1.7/(1.+1.6*uFog*uFog*(d-ZP)*(d-ZP))*(.3+.7*exp(-da*da*1.1));
   float amb=.05+.06*uPulse;
   vec3 c;
   if(k==0){
@@ -55,7 +55,7 @@ vec3 scene(vec2 p){
     c=base*(.22+.25*n)*(.8+.2*n2)+base*ln*.5;
     c*=(amb+L)*mix(.35,1.,smoothstep(.75,ZP+.2,d));
     c+=vec3(1.,.08,.04)*step(.982,n)*(.55+.45*sin(T*5.+n*70.))*(1.-ln)*smoothstep(1.5,3.,d);
-    c*=exp(-.09*d);
+    c*=exp(-.09*uFog*d);
   }else{
     float es=min(fract(fq),1.-fract(fq))*sg*r0/px,e;
     vec3 wc=mix(base,vec3(1.),.3);
@@ -69,7 +69,7 @@ vec3 scene(vec2 p){
     }
     float eg=1.-smoothstep(0.,2.2,e);
     c+=mix(base,vec3(1.),.5)*eg*(1.2+L+near);
-    c*=exp(-.05*d);
+    c*=exp(-.05*uFog*uFog*d);
   }
   c+=vec3(.6,.02,.03)*exp(-r0*r0*140.)*(.6+.4*sin(T*1.3));
   for(int i=0;i<16;i++){
@@ -81,7 +81,7 @@ vec3 scene(vec2 p){
     float s=.03/o.x,dd=length(p-op);
     vec3 oc=o.z>.5?vec3(1.,.85,.3):vec3(1.,.45,.12);
     float b=.85+.15*sin(T*12.+o.y*9.);
-    c+=oc*o.w*b*(smoothstep(s,s*.25,dd)*1.6+s*s*.08/(dd*dd+s*s*.15))*exp(-.04*o.x);
+    c+=oc*o.w*b*(smoothstep(s,s*.25,dd)*1.6+s*s*.08/(dd*dd+s*s*.15))*exp(-.04*uFog*o.x);
   }
   float lp=mod(uPA,seg)-.5*seg;
   vec2 dir=vec2(cos(uPA+uSpin),sin(uPA+uSpin));
