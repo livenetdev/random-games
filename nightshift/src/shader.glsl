@@ -2,7 +2,7 @@
 precision highp float;
 precision highp int;
 uniform vec2 R,uShk;
-uniform float T,uSpin,uPA,uSides,uTrav,uPulse,uFlash,uDeath,uAb,uHue,uShield,uGrz,uDim,uInv;
+uniform float uGA,uGV,T,uSpin,uPA,uSides,uTrav,uPulse,uFlash,uDeath,uAb,uHue,uShield,uGrz,uDim,uInv;
 uniform vec3 uPC;
 uniform vec4 uW[28];
 uniform int uWN;
@@ -96,6 +96,12 @@ vec3 scene(vec2 p){
   c+=vec3(1.)*smoothstep(.013,0.,fd)*vis;
   if(uShield>0.)c+=uPC*.7*smoothstep(.007,0.,abs(pd-.06))*(.6+.4*sin(T*5.))*vis;
   c+=vec3(1.,.95,.85)*uGrz*.5*exp(-pd*pd*60.);
+  if(uGV>.01){
+    float lg=mod(uGA,seg)-.5*seg;vec2 gd=vec2(cos(uGA+uSpin),sin(uGA+uSpin));
+    vec2 gp=gd*.965/(ZP*cos(lg)),gv=p-gp;float ga=dot(gv,-gd),ge=dot(gv,vec2(gd.y,-gd.x));
+    float gf=length(vec2(ge*1.25,ga*(ga>0.?.5:1.3)));
+    c+=vec3(.55,.75,1.)*uGV*(smoothstep(.03,0.,gf)*.9+.0012/(dot(gv,gv)+.0016)*.35)*(.75+.25*sin(T*9.));
+  }
   return c;
 }
 

@@ -18,6 +18,13 @@ One-button-pair tunnel survival. Carry a lantern down a raymarched-style polygon
 - **Embers ✦** — pickups between walls; gold ones sit at gap edges (risk).
 - **Wards I–IX** every 16 s: faster, more spin, new sector counts (5–8), new patterns, new key. Survive Ward Nine → endless *Beyond*.
 
+## From your other projects
+| Source | Trait | In NIGHTSHIFT |
+|---|---|---|
+| dariokuigi (Kinoko MKWii) | frame-exact sim, drift, ghosts | fixed 60 Hz deterministic tick; **drift** (Shift/Space/2nd finger: 72% turn, charges blue → orange sparks faster near walls, release = mini-turbo: +2/+4 chain, score burst); **ghost lantern** per seed (daily, PB seed, past seeds) |
+| Lull (tetris) | banked currency, chain ×, achievements, past boards | chain counter in HUD; 16 achievements paying ✦; Records: lifetime stats + last 25 shifts with ▶ replay-seed |
+| stickrpg | casino, economy | **Night Slots**: 10 ✦ pull, 3 reels, RTP < 1 (ember sink) |
+
 ## Built for you
 - **Splits + live Δ vs PB**: score curve of your best run is stored; HUD shows live ±, each ward banner shows split delta.
 - **Dense death card**: time, pts/s, graze rate, ×3+ uptime, turn°/wall (input economy), hairline (closest graze, PB-tracked), splits, seed.

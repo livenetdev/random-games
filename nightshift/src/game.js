@@ -1,6 +1,6 @@
 'use strict';
 const FS=__SHADER__;
-const TAU=Math.PI*2,WT=.6,ZP=1.25,SPAWN=32,WL=16,OMEGA=5.2,FORG=.06,GRAZE=.25,MAXW=28,MAXO=16;
+const TAU=Math.PI*2,WT=.6,ZP=1.25,SPAWN=32,WL=16,OMEGA=5.2,FORG=.06,GRAZE=.25,TICK=1/60,DRIFT=.72,MAXW=28,MAXO=16;
 const $=i=>document.getElementById(i);
 const mod=(a,b)=>((a%b)+b)%b,clamp=(x,a,b)=>x<a?a:x>b?b:x;
 const ROMAN=['I','II','III','IV','V','VI','VII','VIII','IX'];
@@ -14,7 +14,7 @@ const vib=p=>{try{navigator.vibrate&&navigator.vibrate(p)}catch(e){}};
 
 // ---------------------------------------------------------------- save
 const SKEY='nightshift.v1';
-const defSave=()=>({best:0,bestWard:0,runs:0,embers:0,xp:0,lvl:1,up:{mag:0,kin:0,sh:0,grz:0},col:0,owned:[0],missions:[],mtier:{},grazeTotal:0,streak:0,lastDay:'',startWard:0,mute:false,daily:{},beyond:false,pb:{},files:[],hairBest:9});
+const defSave=()=>({best:0,bestWard:0,runs:0,embers:0,xp:0,lvl:1,up:{mag:0,kin:0,sh:0,grz:0},col:0,owned:[0],missions:[],mtier:{},grazeTotal:0,streak:0,lastDay:'',startWard:0,mute:false,daily:{},beyond:false,pb:{},files:[],hairBest:9,ghosts:{},ach:[],hist:[],pbSeed:'',cutSeed:''});
 let SV=defSave();
 try{const j=JSON.parse(localStorage.getItem(SKEY));if(j&&typeof j==='object')SV=Object.assign(defSave(),j,{up:Object.assign(defSave().up,j.up||{})})}catch(e){}
 const save=()=>{try{localStorage.setItem(SKEY,JSON.stringify(SV))}catch(e){}};
@@ -82,8 +82,17 @@ const FILES=[
 const FCOND=[w=>'reach Ward '+w,w=>'graze 12 inside Ward '+w+' in one shift',w=>'catch a gold ember in Ward '+w];
 function unlock(w,k){
   if(w>8||S.mode!=='play')return;const id=w*3+k;if(SV.files.includes(id))return;
-  SV.files.push(id);save();S.newFiles.push(id);toast('▤ FILE '+ROMAN[w]+'-'+(k+1)+' recovered');AU.file();
+  SV.files.push(id);save();S.newFiles.push(id);toast('▤ FILE '+ROMAN[w]+'-'+(k+1)+' recovered');AU.file();if(SV.files.length>=27)ach('files');
 }
+const enc=a=>{let s='';const b=new Uint8Array(a.buffer);for(let i=0;i<b.length;i+=8192)s+=String.fromCharCode.apply(null,b.subarray(i,i+8192));return btoa(s)};
+const dec=t=>{const b=atob(t),u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return new Uint16Array(u.buffer)};
+const hex=n=>(n>>>0).toString(16).toUpperCase().padStart(8,'0');
+const ACH=[['first','First light','Finish a shift',10],['w5','Chapel bells','Reach Ward V',40],['w9','Ward Nine','Reach Ward IX',80],
+  ['beyond','Walked out','Survive Ward Nine',150],['hair','Hairline','Graze within 1.0°',30],['chain25','Chain 25','Build a 25 chain',40],
+  ['x8','×8','Hit the ×8 multiplier',60],['turbo','Orange sparks','Release an orange mini-turbo',20],['turbo3','Snaking','3 orange mini-turbos in one shift',50],
+  ['ghost','Ghostbuster','Outlast a ghost lantern',40],['miser','Miser','4K Cut: reach 60 s with 4,096+ ticks left',60],['gold5','Gold rush','5 gold embers in one shift',40],
+  ['jack','Jackpot','Hit ◆◆◆ on Night Slots',50],['files','Archivist','Recover all 27 case files',100],['week','Regular','Play 7 days in a row',70],['rank17','Resident','Reach rank 17',60]];
+function ach(id){if(SV.ach.includes(id))return;const a=ACH.find(x=>x[0]===id);if(!a)return;SV.ach.push(id);SV.embers+=a[3];save();toast('★ '+a[1]+' · +'+a[3]+' ✦');AU.mission()}
 const pbKey=()=>S.cut?'c':S.daily?'d'+today():'n';
 const bestFor=()=>S.cut?((SV.pb.c&&SV.pb.c.s)||0):S.daily?(SV.daily[today()]||0):SV.best;
 const sgn=d=>(d>=0?'+':'−')+fmt(Math.abs(d));
@@ -179,6 +188,8 @@ const AU={c:null,on:!SV.mute,nb:0,beat:0,bq:[],
   shield(){this.noise(.4,.3,0,'highpass',3000,1,1);this.tone(1400,.4,'sine',.1,0,300,1)},
   mission(){if(!this.c)return;const t=this.c.currentTime;this.tone(880,.12,'square',.05,t,0,1);this.tone(1318,.25,'square',.05,t+.09,0,1)},
   file(){if(!this.c)return;const t=this.c.currentTime;this.tone(220,1.2,'sine',.12,t,0,1);this.tone(233,1.2,'sine',.08,t,0,1);this.noise(.8,.05,t,'bandpass',900,6,1)},
+  charge(l){this.tone(l>1?1568:1175,.09,'square',.04,0,0,1)},
+  turbo(l){if(!this.c)return;const t=this.c.currentTime;this.noise(.35,.18,t,'bandpass',l>1?2600:1800,1.5,1);this.tone(l>1?330:260,.35,'sawtooth',.07,t,l>1?990:700,1)},
   click(){this.tone(1200,.03,'square',.03)},
 };
 const WROOT=[0,3,-2,5,1,7,-4,2,6];
@@ -199,7 +210,7 @@ function glInit(){
   gl.bindBuffer(gl.ARRAY_BUFFER,gl.createBuffer());
   gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,3,-1,-1,3]),gl.STATIC_DRAW);
   gl.enableVertexAttribArray(0);gl.vertexAttribPointer(0,2,gl.FLOAT,false,0,0);
-  'R uShk T uSpin uPA uSides uTrav uPulse uFlash uDeath uAb uHue uShield uGrz uDim uInv uPC uW uWN uO uON'.split(' ').forEach(n=>U[n]=gl.getUniformLocation(p,n));
+  'R uShk T uSpin uPA uSides uTrav uPulse uFlash uDeath uAb uHue uShield uGrz uDim uInv uPC uW uWN uO uON uGA uGV'.split(' ').forEach(n=>U[n]=gl.getUniformLocation(p,n));
   return true;
 }
 const fxc=$('fx'),cx=fxc.getContext('2d');
@@ -214,24 +225,26 @@ const WA=new Float32Array(MAXW*4),OA=new Float32Array(MAXO*4);
 
 // ---------------------------------------------------------------- state
 let S={mode:'menu',ward:0,walls:[],orbs:[],t:0,spin:0,th:-Math.PI/2,travel:0,sides:6,hue:.58,pulse:0,flash:0,shake:0,grz:0,death:0,dim:.55,ab:0,inv:0,shield:0,v:3};
-const K={l:0,r:0},ptr=new Map();
+const K={l:0,r:0,d:0},ptr=new Map();
 
 function startRun(o){
   o=o||{};AU.init();ensureMissions();
   const daily=!!o.daily,cut=!!o.cut;
-  const sw=daily||cut?0:Math.min(SV.startWard,SV.bestWard);
+  const sw=daily||cut||o.fresh?0:Math.min(SV.startWard,SV.bestWard);
   const seed=o.seed!=null?o.seed:daily?parseInt(today().replace(/-/g,''),10):(Math.random()*4294967296>>>0);
   const P=wardP(sw);
-  S={mode:'play',daily,cut,seed,sw,budget:4096,earned:0,rotTot:0,passed:0,hair:9,hiT:0,curve:[0],splits:{[sw]:0},wg:{},newFiles:[],genR:mulberry32(seed),spinR:mulberry32(seed^0x5bd1e995),
+  S={mode:'play',daily,cut,seed,sw,budget:4096,earned:0,rec:[],ga:0,gv:0,ghostOut:false,drift:0,dch:0,dlv:0,turbos:[0,0,0],golds:0,rotTot:0,passed:0,hair:9,hiT:0,curve:[0],splits:{[sw]:0},wg:{},newFiles:[],genR:mulberry32(seed),spinR:mulberry32(seed^0x5bd1e995),
     t:sw*WL,t0:sw*WL,ward:sw,maxWard:sw,genWard:sw,genP:P,v:P.v,q:[],prev:null,lastZ:13,
     walls:[],orbs:[],th:-Math.PI/2,spin:0,spinV:0,spinDir:1,spinFlip:3,travel:S.travel||0,
     score:0,combo:0,comboT:0,mult:1,maxMult:1,grazes:0,emb:0,embF:0,shield:cut?0:SV.up.sh,inv:0,revives:0,
     sides:P.n,sidesT:P.n,hue:S.hue,pulse:0,flash:.6,shake:0,grz:0,death:0,dim:1,ab:0,recorded:false,deathT:0,ts:1,beatT:0,
     liveDone:{},hudScore:-1,hudEmb:-1};
-  K.l=K.r=0;ptr.clear();
+  K.l=K.r=K.d=0;ptr.clear();
   AU.beat=0;AU.bq=[];if(AU.c)AU.nb=AU.c.currentTime+.05;
   AU.drone(.1,WROOT[sw%9]);
   const pb=SV.pb[pbKey()];S.pb=sw===0&&pb&&pb.c?pb:null;
+  S.gk=S.daily?'d'+today():(cut?'c':'n')+hex(seed);
+  const g=sw===0&&SV.ghosts[S.gk];S.ghost=g?{a:dec(g.d),s:g.s}:null;acc=0;
   show('hud');
   if(cut)banner('4K CUT','4,096 ticks of steering · grazes refund',P.hue,1);else banner('WARD '+P.num,P.name,P.hue);
   hudStatic();unlock(sw,0);
@@ -281,6 +294,14 @@ function edgeD(w,a){
 }
 const overl=w=>w.z<=ZP&&w.z+WT>=ZP;
 
+let acc=0;
+function tick(){
+  update(TICK);
+  S.rec.push(Math.round(mod(S.th,TAU)*1e4));
+  if(S.ghost){const i=S.rec.length-1;
+    if(i<S.ghost.a.length){S.ga=S.ghost.a[i]/1e4;S.gv=1}
+    else if(!S.ghostOut&&S.mode==='play'){S.ghostOut=true;toast('Ghost lantern out · you outlasted it');ach('ghost')}}
+}
 function update(dt){
   const P=wardP(S.ward);
   S.t+=dt;
@@ -297,9 +318,18 @@ function update(dt){
   for(const o of S.orbs)o.z-=dz;
   spawn();
   // steering, blocked sideways by walls beside you
-  const inp=(K.r||[...ptr.values()].some(v=>v>0)?1:0)-(K.l||[...ptr.values()].some(v=>v<0)?1:0);
+  const p0=ptr.size?ptr.values().next().value:0;
+  const inp=(K.r||p0>0?1:0)-(K.l||p0<0?1:0);
+  const drift=K.d||ptr.size>1;
+  if(drift&&inp){
+    S.dch+=dt*(1+1.5*Math.max(0,1-nearEdge()/.35));
+    const lv=S.dch>=1.1?2:S.dch>=.55?1:0;
+    if(lv>S.dlv){S.dlv=lv;AU.charge(lv)}
+    if(lv&&Math.random()<.6){const p=proj(ZP,S.th,.03);burst(p[0],p[1],1,lv>1?'#ff9a2a':'#5cc8ff',160,.25,2.5)}
+  }
+  if(!drift&&S.dch>0){turbo(S.dlv);S.dch=0;S.dlv=0}
   if(inp&&(!S.cut||S.budget>0)){
-    const nt=S.th-inp*OMEGA*dt;let ok=true;
+    const nt=S.th-inp*OMEGA*(drift?DRIFT:1)*dt;let ok=true;
     for(const w of S.walls)if(overl(w)&&filled(w,nt)&&!filled(w,S.th)){ok=false;break}
     if(ok){S.th=nt;S.rotTot+=OMEGA*dt;if(S.cut)S.budget=Math.max(0,S.budget-dt*120)}
   }
@@ -312,7 +342,7 @@ function update(dt){
         die();return;
       }
       w.minD=Math.min(w.minD,edgeD(w,S.th));
-    }else if(!w.passed&&w.z+WT<ZP){w.passed=true;S.passed++;if(w.minD<GRAZE){S.hair=Math.min(S.hair,w.minD);graze()}}
+    }else if(!w.passed&&w.z+WT<ZP){w.passed=true;S.passed++;if(w.minD<GRAZE){S.hair=Math.min(S.hair,w.minD);if(w.minD<.01745)ach('hair');graze()}}
   }
   S.walls=S.walls.filter(w=>w.z+WT>.25);
   const pr=.28+.1*SV.up.mag;
@@ -325,16 +355,25 @@ function update(dt){
   if(S.comboT<=0&&S.combo>0){S.combo=0;setMult()}
   S.score+=S.v*dt*5*S.mult;
   if(S.mult>=3)S.hiT+=dt;
+  if(S.cut&&S.t-S.t0>=60&&S.budget>=4096)ach('miser');
   while(S.curve.length<=Math.floor(S.t-S.t0))S.curve.push(Math.floor(S.score));
   if(!S.recorded&&bestFor()>0&&S.score>bestFor()){S.recorded=true;banner('NEW RECORD','keep going',.12,1);AU.record();vib(30)}
   liveMissions();
+}
+function nearEdge(){let d=9;for(const w of S.walls)if(w.z<ZP+4&&w.z+WT>=ZP)d=Math.min(d,edgeD(w,S.th));return d}
+function turbo(l){
+  if(!l)return;S.turbos[l]++;
+  S.combo+=l*2;S.comboT=comboMax();setMult();S.score+=(l>1?150:60)*S.mult;S.flash=Math.max(S.flash,.25);
+  AU.turbo(l);vib(l>1?20:10);
+  const p=proj(ZP,S.th,.05),c=l>1?'#ff9a2a':'#5cc8ff';burst(p[0],p[1],l>1?40:20,c,420,.5,3);ftext(p[0],p[1]-40,l>1?'MINI-TURBO':'mini-turbo',c,l>1?20:15);
+  if(l>1){ach('turbo');if(S.turbos[2]>=3)ach('turbo3')}
 }
 const comboMax=()=>2.6+.5*SV.up.grz;
 function setMult(){
   const m=Math.min(8,1+Math.floor(S.combo/5));
   if(m>S.mult){AU.mult(m);const e=$('mult');e.classList.remove('pop');void e.offsetWidth;e.classList.add('pop');
     if(m>=3){const p=proj(ZP,S.th,.05);ftext(p[0],p[1]-36,'×'+m,'#ffb35c',26)}}
-  S.mult=m;S.maxMult=Math.max(S.maxMult,m);
+  S.mult=m;S.maxMult=Math.max(S.maxMult,m);if(m>=8)ach('x8');if(S.combo>=25)ach('chain25');
 }
 function graze(){
   S.grazes++;S.combo++;S.comboT=comboMax();setMult();
@@ -351,7 +390,7 @@ function collect(o){
   S.combo++;S.comboT=comboMax();setMult();
   S.score+=(o.gold?60:12)*S.mult;
   if(S.cut){const b=o.gold?256:64;S.budget+=b;S.earned+=b}
-  if(o.gold)unlock(S.ward,2);
+  if(o.gold){unlock(S.ward,2);if(++S.golds>=5)ach('gold5')}
   AU.ember(o.gold);vib(o.gold?18:8);
   const p=proj(o.z,o.a,.16);burst(p[0],p[1],o.gold?26:12,o.gold?'#ffd86a':'#ff8a2a',o.gold?380:220,.5,3);
   if(o.gold)ftext(p[0],p[1]-26,'+5 ✦','#ffd86a',18);
@@ -372,7 +411,7 @@ function onWard(){
   S.maxWard=Math.max(S.maxWard,S.ward);S.sidesT=P.n;
   const sp=Math.floor(S.score);S.splits[S.ward]=sp;
   const ref=S.pb&&S.pb.sp&&S.pb.sp[S.ward],dl=ref!=null?'  ·  '+sgn(sp-ref)+' vs PB':'';
-  unlock(S.ward,0);S.flash=.45;S.pulse=1.5;
+  unlock(S.ward,0);if(S.ward>=4)ach('w5');if(S.ward>=8)ach('w9');if(S.ward>=9)ach('beyond');S.flash=.45;S.pulse=1.5;
   AU.ward();AU.drone(.1,WROOT[S.ward%9]);vib(25);
   if(S.ward===9){
     banner('SHIFT SURVIVED','you walked out of Ward Nine'+dl,.13);
@@ -442,6 +481,13 @@ function finalize(){
   for(const k in SV.pb)if(k[0]==='d'&&k!=='d'+today())delete SV.pb[k];
   if(S.hair<SV.hairBest)SV.hairBest=S.hair;
   SV.bestWard=Math.max(SV.bestWard,Math.min(S.maxWard,9));
+  if(S.sw===0&&S.rec.length>120&&!S.revives){const old=SV.ghosts[S.gk];
+    if(!old||OV.sc>old.s){SV.ghosts[S.gk]={s:OV.sc,d:enc(Uint16Array.from(S.rec)),t:Date.now(),seed:S.seed,cut:S.cut?1:0};if(old)rew.push('ghost beaten · new ghost saved')}
+    if(OV.newBest&&!S.daily)S.cut?SV.cutSeed=S.gk:SV.pbSeed=S.gk;}
+  {const keep=new Set(['d'+today(),SV.pbSeed,SV.cutSeed]);const ks=Object.keys(SV.ghosts).filter(k=>!keep.has(k)).sort((a,b)=>SV.ghosts[b].t-SV.ghosts[a].t);
+   ks.slice(4).forEach(k=>delete SV.ghosts[k]);Object.keys(SV.ghosts).forEach(k=>{if(k[0]==='d'&&k!=='d'+today())delete SV.ghosts[k]})}
+  SV.hist.unshift({m:S.cut?'c':S.daily?'d':'n',s:OV.sc,w:S.maxWard,t:Math.round((S.t-S.t0)*10)/10,g:S.grazes,seed:S.seed,sw:S.sw,at:Date.now()});SV.hist.length=Math.min(SV.hist.length,25);
+  ach('first');
   if(S.emb)rew.push('+'+S.emb+' ✦ embers');
   let earned=S.emb;
   const td=today();
@@ -455,6 +501,7 @@ function finalize(){
   SV.xp+=OV.sc;
   while(SV.xp>=xpNeed(SV.lvl)){SV.xp-=xpNeed(SV.lvl);SV.lvl++;const b=20+5*SV.lvl;earned+=b;rew.push('rank '+SV.lvl+' · +'+b+' ✦')}
   SV.embers+=earned;
+  if(SV.streak>=7)ach('week');if(SV.lvl>=17)ach('rank17');
   save();
   $('oRew').innerHTML=rew.map(r=>'<span>'+r+'</span>').join('');
   rankHTML($('oRank'),SV.lvl>l0?0:x0);
@@ -475,10 +522,10 @@ function cardHTML(sc,prev){
   h+=`<div class="spl"><span>seed <b>${S.daily?'daily #'+dayNo():(S.seed>>>0).toString(16).toUpperCase().padStart(8,'0')}</b></span></div>`;
   return h;
 }
-function toMenu(){if(S.mode==='over')finalize();S.mode='menu';S.walls=[];S.orbs=[];S.death=0;S.dim=.55;AU.drone(.05);menuHTML();show('menu')}
+function toMenu(){if(S.mode==='over')finalize();PS=[];FT=[];$('banner').classList.remove('on');S.mode='menu';S.walls=[];S.orbs=[];S.death=0;S.dim=.55;AU.drone(.05);menuHTML();show('menu')}
 
 // ---------------------------------------------------------------- ui
-const panels=['menu','over','shop','hud','files'];
+const panels=['menu','over','shop','hud','files','recs','slots'];
 function show(id){for(const p of panels)$(p).classList.toggle('hide',p!==id);$('pause').classList.add('hide')}
 function banner(a,b,h,small){
   const e=$('banner');e.querySelector('.b1').textContent=a;e.querySelector('.b2').textContent=b||'';
@@ -510,6 +557,8 @@ function menuHTML(){
   missionsHTML($('mList'));
   const cb=SV.pb.c&&SV.pb.c.s;$('b4k').textContent='4K Cut'+(cb?' · '+fmt(cb):'');
   $('bFiles').textContent='Files '+SV.files.length+'/27';
+  $('bRecs').textContent='Records '+SV.ach.length+'/'+ACH.length;
+  const pg=SV.ghosts[SV.pbSeed];$('bGhost').classList.toggle('hide',!pg);if(pg)$('bGhost').textContent='Race PB ghost · '+fmt(pg.s);
   $('bMute').textContent='sound: '+(AU.on?'on':'off')+' [m]';
 }
 function shopHTML(){
@@ -530,6 +579,35 @@ $('bDaily').onclick=()=>startRun({daily:1});
 $('b4k').onclick=()=>startRun({cut:1});
 $('bSeed').onclick=()=>{OV.lock=0;retry(1)};
 $('bFiles').onclick=()=>{filesHTML();show('files')};
+$('bGhost').onclick=()=>{const g=SV.ghosts[SV.pbSeed];if(g)startRun({seed:g.seed,fresh:1})};
+$('bRecs').onclick=()=>{recsHTML();show('recs')};
+$('bRBack').onclick=()=>{menuHTML();show('menu')};
+$('bSlots').onclick=()=>{slotsHTML();show('slots')};
+$('bSBack').onclick=()=>{menuHTML();show('menu')};
+const MODE={n:'shift',d:'daily',c:'4K cut'};
+function recsHTML(){
+  const tot=SV.hist.reduce((a,h)=>a+h.t,0);
+  $('rLife').innerHTML=`<span>shifts <b>${fmt(SV.runs)}</b></span><span>grazes <b>${fmt(SV.grazeTotal)}</b></span><span>best <b>${fmt(SV.best)}</b></span><span>hairline <b>${SV.hairBest<9?(SV.hairBest*180/Math.PI).toFixed(1)+'°':'—'}</b></span><span>ghosts <b>${Object.keys(SV.ghosts).length}</b></span>`;
+  $('rAch').innerHTML=ACH.map(a=>{const on=SV.ach.includes(a[0]);return`<div class="ac${on?' on':''}"><b>${on?'★':'☆'} ${a[1]}</b><span>${a[2]}</span><em>+${a[3]}</em></div>`}).join('');
+  $('rHist').innerHTML=SV.hist.length?`<table><tr><th>mode</th><th>score</th><th>ward</th><th>time</th><th>grz</th><th>seed</th><th></th></tr>`+SV.hist.map((h,i)=>`<tr><td>${MODE[h.m]}</td><td>${fmt(h.s)}</td><td>${h.w>8?'∞':ROMAN[h.w]}</td><td>${h.t}s</td><td>${h.g}</td><td>${hex(h.seed)}</td><td><button data-h="${i}" title="Replay this seed">▶</button></td></tr>`).join('')+'</table>':'<div class="help">No shifts yet.</div>';
+}
+$('rHist').addEventListener('click',e=>{const i=e.target.dataset&&e.target.dataset.h;if(i==null)return;const h=SV.hist[+i];startRun({seed:h.seed,cut:h.m==='c',fresh:1})});
+// Night Slots
+const SYM=[['☾',.36],['✦',.3],['✕',.24],['◆',.1]],PAY={'◆':300,'✦':60,'☾':40,'✕':100},PULL=10;let spinning=false;
+const roll=()=>{let r=Math.random();for(const s of SYM){if((r-=s[1])<0)return s[0]}return'☾'};
+function slotsHTML(msg){$('slEmb').textContent='✦ '+fmt(SV.embers);$('bPull').disabled=spinning||SV.embers<PULL;if(msg!=null)$('slMsg').innerHTML=msg}
+function pull(){
+  if(spinning||SV.embers<PULL)return;AU.init();spinning=true;SV.embers-=PULL;save();slotsHTML('');
+  const res=[roll(),roll(),roll()],els=[...document.querySelectorAll('.reel')];
+  els.forEach((el,i)=>{el.classList.add('spin');const iv=setInterval(()=>{el.textContent=SYM[Math.random()*4|0][0];AU.click()},55);
+    setTimeout(()=>{clearInterval(iv);el.textContent=res[i];el.classList.remove('spin');AU.tone(300+i*120,.08,'square',.05);
+      if(i===2){let win=0;const c={};res.forEach(x=>c[x]=(c[x]||0)+1);
+        if(c[res[0]]===3)win=PAY[res[0]];else if(Object.entries(c).some(([k,v])=>v===2&&k!=='✕'))win=10;
+        SV.embers+=win;save();spinning=false;
+        if(win){AU.record();if(res.join('')==='◆◆◆')ach('jack')}
+        slotsHTML(win?`<span class="up">+${win} ✦</span>`:'<span class="dn">nothing</span>')}},500+i*300)});
+}
+$('bPull').onclick=pull;
 $('bFBack').onclick=()=>{menuHTML();show('menu')};
 function filesHTML(){$('fCount').textContent=SV.files.length+' / 27 recovered';
   $('fList').innerHTML=WARDS.map((w,i)=>`<div class="mh">Ward ${ROMAN[i]} · ${w[0]}</div>`+[0,1,2].map(k=>{const id=i*3+k,on=SV.files.includes(id);
@@ -547,7 +625,7 @@ function hudStatic(){const P=wardP(S.ward);$('wname').textContent='Ward '+P.num+
 function hud(){
   const sc=Math.floor(S.score);
   if(sc!==S.hudScore){S.hudScore=sc;$('score').textContent=fmt(sc)}
-  $('mult').textContent='×'+S.mult;
+  $('mult').textContent='×'+S.mult+(S.combo?' · chain '+S.combo:'');
   $('cbar').firstChild.style.width=(S.combo?clamp(S.comboT/comboMax(),0,1)*100:0)+'%';
   $('wbar').firstChild.style.width=(S.ward>=9?100:mod(S.t,WL)/WL*100)+'%';
   const best=bestFor();
@@ -579,9 +657,10 @@ function drawFx(dt){
 }
 
 // ---------------------------------------------------------------- input
-const LK=['ArrowLeft','KeyA'],RK=['ArrowRight','KeyD'];
+const LK=['ArrowLeft','KeyA'],RK=['ArrowRight','KeyD'],DK=['ShiftLeft','ShiftRight','Space'];
 addEventListener('keydown',e=>{
-  if(LK.includes(e.code))K.l=1;else if(RK.includes(e.code))K.r=1;
+  if(LK.includes(e.code))K.l=1;else if(RK.includes(e.code))K.r=1;else if(DK.includes(e.code))K.d=1;
+  if(e.code==='Space'&&!$('slots').classList.contains('hide')){e.preventDefault();if(!e.repeat)pull();return}
   if(e.repeat)return;
   if(S.paused&&S.mode==='play'){unpause();return}
   if(e.code==='KeyM'){SV.mute=AU.on;AU.mute(SV.mute);save();if(S.mode==='menu')menuHTML();return}
@@ -594,11 +673,11 @@ addEventListener('keydown',e=>{
   else if(S.mode==='play'&&(e.code==='Escape'||e.code==='KeyP'))pause();
   if(e.code.startsWith('Arrow')||e.code==='Space')e.preventDefault();
 });
-addEventListener('keyup',e=>{if(LK.includes(e.code))K.l=0;else if(RK.includes(e.code))K.r=0});
+addEventListener('keyup',e=>{if(LK.includes(e.code))K.l=0;else if(RK.includes(e.code))K.r=0;else if(DK.includes(e.code))K.d=0});
 addEventListener('pointerdown',e=>{if(S.mode!=='play')return;if(S.paused){unpause();return}ptr.set(e.pointerId,e.clientX<W/2?-1:1)});
 addEventListener('pointermove',e=>{if(ptr.has(e.pointerId))ptr.set(e.pointerId,e.clientX<W/2?-1:1)});
 ['pointerup','pointercancel','pointerleave'].forEach(t=>addEventListener(t,e=>ptr.delete(e.pointerId)));
-addEventListener('blur',()=>{K.l=K.r=0;ptr.clear();pause()});
+addEventListener('blur',()=>{K.l=K.r=K.d=0;ptr.clear();pause()});
 document.addEventListener('visibilitychange',()=>{if(document.hidden)pause()});
 addEventListener('contextmenu',e=>e.preventDefault());
 function pause(){if(S.mode==='play'&&!S.paused){S.paused=true;$('pause').classList.remove('hide')}}
@@ -612,7 +691,8 @@ function frame(now){
   frames++;if(rdt>.024)slow++;
   if(frames>=90){if(slow>45&&RS>.5){RS=Math.max(.5,RS*.8);resize()}frames=slow=0}
   const dt=Math.min(rdt,1/30);
-  if(S.mode==='play'&&!S.paused){update(dt);hud()}
+  if(S.mode==='play'&&!S.paused){acc+=rdt;let k=0;while(acc>=TICK&&k<6&&S.mode==='play'){tick();acc-=TICK;k++}if(k>=6)acc=0;if(S.mode==='play')hud()}
+  if(S.ghostOut)S.gv*=Math.exp(-rdt*3);
   else if(S.mode==='dying'){
     S.deathT+=rdt;S.ts=Math.max(0,1-S.deathT*2.2);
     const d=dt*S.ts*.4;for(const w of S.walls)w.z-=S.v*d;S.travel+=S.v*d;
@@ -639,7 +719,7 @@ function render(t){
   gl.uniform1f(U.uTrav,S.travel%2000);gl.uniform1f(U.uPulse,S.pulse);gl.uniform1f(U.uFlash,S.flash*.5);
   gl.uniform1f(U.uDeath,S.death);gl.uniform1f(U.uAb,S.ab);gl.uniform1f(U.uHue,S.hue);gl.uniform1f(U.uShield,S.mode==='play'&&S.shield>0?1:0);
   gl.uniform1f(U.uGrz,S.grz);gl.uniform1f(U.uDim,S.dim);gl.uniform1f(U.uInv,S.inv>0?1:0);
-  gl.uniform3fv(U.uPC,COLORS[SV.col][1]);
+  gl.uniform3fv(U.uPC,COLORS[SV.col][1]);gl.uniform1f(U.uGA,S.ga||0);gl.uniform1f(U.uGV,(S.mode==='play'||S.mode==='dying')&&S.ghost?S.gv||0:0);
   gl.uniform4fv(U.uW,WA);gl.uniform1i(U.uWN,n);gl.uniform4fv(U.uO,OA);gl.uniform1i(U.uON,m);
   gl.drawArrays(gl.TRIANGLES,0,3);
 }

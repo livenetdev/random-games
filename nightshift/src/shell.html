@@ -106,6 +106,19 @@ button.big small{font-size:10px;opacity:.6;font-weight:400}
 .f.lk{border-left-color:#ffffff22;color:var(--dim)}.f.lk span{color:var(--dim)}
 .f.nw{border-left-color:var(--gold);animation:fin .8s ease-out}
 @keyframes fin{from{opacity:0;transform:translateX(-8px)}}
+.achs{display:grid;grid-template-columns:1fr 1fr;gap:6px;text-align:left}
+.ac{border:1px solid #ffffff1a;background:#0009;padding:6px 8px;display:flex;flex-direction:column;gap:1px;font-size:11px;color:var(--dim);min-width:0}
+.ac b{font-size:12px;color:var(--dim)}.ac em{font-style:normal;color:var(--acc);font-size:10px}
+.ac.on{border-color:#ffd86a66}.ac.on b{color:var(--gold)}
+.hist{overflow-x:auto}
+.hist table{width:100%;border-collapse:collapse;font-size:11px;font-variant-numeric:tabular-nums;text-align:left}
+.hist th{color:var(--dim);font-weight:400;letter-spacing:.12em;text-transform:uppercase;font-size:9px;padding:4px}
+.hist td{padding:4px;border-top:1px solid #ffffff12;white-space:nowrap}
+.hist button{padding:2px 8px;font-size:10px}
+.reels{display:flex;gap:10px;justify-content:center}
+.reel{width:76px;height:96px;display:flex;align-items:center;justify-content:center;font-size:44px;border:1px solid var(--acc);background:#0b0805;color:var(--acc);box-shadow:inset 0 0 24px #000,0 0 18px #ffb35c22}
+.reel.spin{color:var(--dim);filter:blur(1px)}
+.paytab{display:flex;flex-wrap:wrap;gap:4px 14px;justify-content:center;font-size:11px;color:var(--dim)}
 #pause{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;font-size:14px;letter-spacing:.4em;background:#0008;text-transform:uppercase}
 #err{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:24px;text-align:center;color:var(--dim)}
 </style>
@@ -127,10 +140,11 @@ button.big small{font-size:10px;opacity:.6;font-weight:400}
   <div id="mRank"></div>
   <button id="bPlay" class="big">Begin shift <small>[space]</small></button>
   <div class="row"><button id="bWard"></button><button id="bDaily"></button><button id="b4k"></button></div>
-  <div class="row"><button id="bShop">Upgrades</button><button id="bFiles"></button></div>
+  <button id="bGhost" class="hide"></button>
+  <div class="row"><button id="bShop">Upgrades</button><button id="bFiles"></button><button id="bRecs"></button><button id="bSlots">Slots</button></div>
   <div class="stats" id="mStats"></div>
   <div class="missions" id="mList"></div>
-  <div class="help">← → / A D · touch: hold left or right half · skim walls to graze · R resets</div>
+  <div class="help">← → / A D · touch: hold left or right half · Shift / 2nd finger drifts: charge, release for mini-turbo · R resets</div>
   <div class="row"><button id="bMute"></button></div>
 </div>
 
@@ -164,6 +178,24 @@ button.big small{font-size:10px;opacity:.6;font-weight:400}
   <div class="sub" id="fCount"></div>
   <div class="files" id="fList"></div>
   <button id="bFBack">Back</button>
+</div>
+<div id="recs" class="panel hide">
+  <div class="title" style="font-size:32px">RECORDS</div>
+  <div class="stats" id="rLife"></div>
+  <div class="mh">achievements</div>
+  <div class="achs" id="rAch"></div>
+  <div class="mh">past shifts</div>
+  <div class="hist" id="rHist"></div>
+  <button id="bRBack">Back</button>
+</div>
+<div id="slots" class="panel hide">
+  <div class="title" style="font-size:32px">NIGHT SLOTS</div>
+  <div class="stats"><span class="e" id="slEmb"></span></div>
+  <div class="reels"><div class="reel">☾</div><div class="reel">✦</div><div class="reel">◆</div></div>
+  <div class="near" id="slMsg"></div>
+  <button id="bPull" class="big">Pull · 10 ✦ <small>[space]</small></button>
+  <div class="paytab"><span>◆◆◆ 300</span><span>✕✕✕ 100</span><span>✦✦✦ 60</span><span>☾☾☾ 40</span><span>any pair (not ✕) 10</span></div>
+  <button id="bSBack">Back</button>
 </div>
 <div id="pause" class="hide">paused · press to resume</div>
 <script>
