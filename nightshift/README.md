@@ -19,8 +19,8 @@ One-button-pair tunnel survival. Carry a lantern down a raymarched-style polygon
 - **Wards I–IX** every 16 s: faster, more spin, new sector counts (5–8), new patterns, new key. Survive Ward Nine → endless *Beyond*.
 
 ## Skipping wards
-- **Stairwells**: rare: ~14% chance in an eligible ward (from its 4th pattern, first half of the ward, never in the ward right after one), a green striped spiral appears with a callout. Optional: every step keeps a fixed 2-sector regular gap the staircase never crosses. Follow the lit single-sector stair gap (green floor) through all 8–11 steps (zig-zags, often jumps two sectors, spaced at the bare minimum: 0.04 s reaction margin) with no wall contact → drop straight to the next ward; bonus = skipped seconds' distance points × chain multiplier × express. Once on the stairs, leaving the lit gap or touching a step → "stairwell lost", express resets; a head-on hit while on the stairs smashes the step (no death) and resets your chain. Ignoring a stairwell costs nothing.
-- **Express**: each clean stairwell in a row stacks ×1.5, ×2, ×2.5… on the skip bonus; losing one resets it.
+- **Clearance**: each ward has a meter filled by playing riskily: graze +5% (+3.5% more if within 2°), ember +3%, gold ember +12%, flare +8% / white-hot flare +20% (all ÷(1+0.06·ward)); a shield break or Vigil hit costs 30%. Full meter → the ward ends immediately: drop to the next one with bonus = skipped seconds' distance points × chain multiplier × express.
+- **Express**: clear wards early back to back → skip bonus ×1.5, ×2, ×2.5…; a ward that runs out its clock resets it.
 - **Ward map** (menu): start at any ward you've reached, with a head start of half your best score at that ward entry (recorded from Ward I starts).
 
 ## Why these hooks (inferred from the kinds of games you build)

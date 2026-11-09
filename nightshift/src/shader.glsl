@@ -26,7 +26,7 @@ vec3 scene(vec2 p){
   float loc=mod(a,seg)-.5*seg;
   float rho=max(r0*cos(loc),1e-4);
   float dF=1./rho,dT=(1.-HB)/rho;
-  float d=dF,wz=0.,fq=0.,sg=1.,rz=0.,st=0.;
+  float d=dF,wz=0.,fq=0.,sg=1.,rz=0.;
   int k=0;
   for(int i=0;i<28;i++){
     if(i>=uWN)break;
@@ -35,8 +35,8 @@ vec3 scene(vec2 p){
     int s=min(int(q),int(w.z)-1);
     if(((int(w.y)>>s)&1)==0)continue;
     float z=rho*w.x;
-    if(z>1.-HB&&z<1.&&w.x<d){d=w.x;k=1;wz=w.x;fq=q;sg=g;rz=z;st=w.w>0.?1.:(w.w<0.?.4:0.);}
-    else if(dT>w.x&&dT<w.x+WT&&dT<d){d=dT;k=2;wz=w.x;fq=q;sg=g;st=w.w>0.?1.:(w.w<0.?.4:0.);}
+    if(z>1.-HB&&z<1.&&w.x<d){d=w.x;k=1;wz=w.x;fq=q;sg=g;rz=z;}
+    else if(dT>w.x&&dT<w.x+WT&&dT<d){d=dT;k=2;wz=w.x;fq=q;sg=g;}
   }
   vec3 base=pal(uHue);
   float fl=.92+.08*sin(T*31.)*sin(T*7.3);
@@ -55,31 +55,20 @@ vec3 scene(vec2 p){
     c=base*(.22+.25*n)*(.8+.2*n2)+base*ln*.5;
     c*=(amb+L)*mix(.35,1.,smoothstep(.75,ZP+.2,d));
     c+=vec3(1.,.08,.04)*step(.982,n)*(.55+.45*sin(T*5.+n*70.))*(1.-ln)*smoothstep(1.5,3.,d);
-    for(int i=0;i<28;i++){
-      if(i>=uWN)break;
-      vec4 w=uW[i];
-      if(w.w<=0.)continue;
-      float g=TAU/w.z;int s=min(int(a/g),int(w.z)-1);
-      if(s==int(w.w-.5)&&d>w.x-.5&&d<w.x+WT+.3)c+=vec3(.15,.9,.4)*(.75+.25*sin(T*10.-w.x*2.))*(1.-.5*ln);
-    }
     c*=exp(-.09*uFog*d);
   }else{
-    float es=min(fract(fq),1.-fract(fq))*sg*r0/px,e,sv;
-    vec3 sc=mix(vec3(.25,1.,.5),vec3(.18,.3,.22),step(st,.7));
-    vec3 wc=st>.1?sc*(.85+.15*sin(T*8.-wz)):mix(base,vec3(1.),.3);
+    float es=min(fract(fq),1.-fract(fq))*sg*r0/px,e;
+    vec3 wc=mix(base,vec3(1.),.3);
     float near=exp(-max(wz-ZP,0.)*.25);
     if(k==1){
-      e=min(es,min((rz-(1.-HB))/wz/px,(1.-rz)/wz/px));sv=(rz-(1.-HB))/HB*4.;
+      e=min(es,min((rz-(1.-HB))/wz/px,(1.-rz)/wz/px));
       c=wc*(.28+.5*near+L*1.1);
     }else{
-      e=min(es,(d-wz)*rho*rho/(1.-HB)/px);sv=(d-wz)/WT*4.+.5;
+      e=min(es,(d-wz)*rho*rho/(1.-HB)/px);
       c=wc*(.12+.25*near+L*.6);
     }
     float eg=1.-smoothstep(0.,2.2,e);
-    c+=(st>.1?sc*1.4:mix(base,vec3(1.),.5))*eg*(1.2+L+near);
-    if(st>.1){float stp=smoothstep(.42,.5,fract(sv))*smoothstep(1.,.92,fract(sv));
-      vec3 lit=st>.7?vec3(.75,1.,.82)*(1.15+.35*sin(T*9.-wz*2.)):vec3(.35,.45,.38);
-      c=mix(vec3(.01,.06,.03),lit,.15+.85*stp)+sc*eg*2.;}
+    c+=mix(base,vec3(1.),.5)*eg*(1.2+L+near);
     c*=exp(-.05*uFog*uFog*d);
   }
   c+=vec3(.6,.02,.03)*exp(-r0*r0*140.)*(.6+.4*sin(T*1.3));

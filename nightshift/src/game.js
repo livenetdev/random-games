@@ -91,7 +91,7 @@ const ACH=[['first','First light','Finish a shift',10],['w5','Chapel bells','Rea
   ['beyond','Walked out','Survive Ward Nine',150],['hair','Hairline','Graze within 1.0°',30],['chain25','Chain 25','Build a 25 chain',40],
   ['x8','×8','Hit the ×8 multiplier',60],['turbo','White heat','Release a white-hot flare',20],['turbo3','Bonfire','3 white-hot flares in one shift',50],
   ['ghost','Ghostbuster','Outlast a ghost lantern',40],['miser','Miser','4K Cut: reach 60 s with 4,096+ ticks left',60],['gold5','Gold rush','5 gold embers in one shift',40],
-  ['stair','Fire exit','Skip a ward through a stairwell',20],['express','Express','Skip 3 wards in one shift',60],['heat','Feverish','Finish a shift at +100% heat',60],['unbroken','Unbroken','Hold a vigil 120 s without a hit',50],['files','Archivist','Recover all 27 case files',100],['week','Regular','Play 7 days in a row',70],['rank17','Resident','Reach rank 17',60]];
+  ['clear','Clearance','Clear a ward early',20],['express','Express','Clear 3 wards early in one shift',60],['heat','Feverish','Finish a shift at +100% heat',60],['unbroken','Unbroken','Hold a vigil 120 s without a hit',50],['files','Archivist','Recover all 27 case files',100],['week','Regular','Play 7 days in a row',70],['rank17','Resident','Reach rank 17',60]];
 function ach(id){if(SV.ach.includes(id))return;const a=ACH.find(x=>x[0]===id);if(!a)return;SV.ach.push(id);SV.embers+=a[3];save();toast('★ '+a[1]+' · +'+a[3]+' ✦');AU.mission()}
 const CONDS=[['brittle','Brittle','Side contact kills. No sliding along walls.',.25],['dark','Blackout','Fog closes in; the lantern reaches half as far.',.2],
   ['vert','Vertigo','The tunnel spins 1.6× faster.',.2],['fast','Overtime','Everything moves 15% faster.',.3],['mirror','Mirror','Left and right are swapped.',.15],
@@ -201,7 +201,6 @@ const AU={c:null,on:!SV.mute,nb:0,beat:0,bq:[],
   file(){if(!this.c)return;const t=this.c.currentTime;this.tone(220,1.2,'sine',.12,t,0,1);this.tone(233,1.2,'sine',.08,t,0,1);this.noise(.8,.05,t,'bandpass',900,6,1)},
   charge(l){this.tone(l>1?1568:1175,.09,'square',.04,0,0,1)},
   turbo(l){if(!this.c)return;const t=this.c.currentTime;this.noise(.35,.18,t,'bandpass',l>1?2600:1800,1.5,1);this.tone(l>1?330:260,.35,'sawtooth',.07,t,l>1?990:700,1)},
-  stair(){if(!this.c)return;const t=this.c.currentTime;[0,7,12].forEach((s,i)=>this.tone(523*Math.pow(2,s/12),.4,'sine',.07,t+i*.08,0,1))},
   skip(x){if(!this.c)return;const t=this.c.currentTime;[24,19,15,12,7,3,0].forEach((s,i)=>this.tone(220*Math.pow(2,(s+x)/12),.18,'triangle',.11,t+i*.05,0,1));this.tone(70,.7,'sine',.5,t+.35,35)},
   click(){this.tone(1200,.03,'square',.03)},
 };
@@ -247,7 +246,7 @@ function startRun(o){
   const sw=daily||cut||vigil||o.fresh?0:Math.min(SV.startWard,SV.bestWard);
   const seed=o.seed!=null?o.seed:daily?parseInt(today().replace(/-/g,''),10):(Math.random()*4294967296>>>0);
   const P=WP(sw,C);
-  S={mode:'play',daily,cut,vigil,C,cond,bits:condBits(cond),hm:1+heatOf(cond),hits:0,unb:0,bestUnb:0,stairs:{},stairSeq:0,stairWard:-1,genCount:0,express:0,skipped:0,skipT:0,skipping:false,seed,sw,budget:4096,earned:0,rec:[],ga:0,gv:0,ghostOut:false,drift:0,dch:0,dlv:0,turbos:[0,0,0],golds:0,rotTot:0,passed:0,hair:9,hiT:0,curve:[0],splits:{[sw]:0},wg:{},newFiles:[],genR:mulberry32(seed),spinR:mulberry32(seed^0x5bd1e995),
+  S={mode:'play',daily,cut,vigil,C,cond,bits:condBits(cond),hm:1+heatOf(cond),hits:0,unb:0,bestUnb:0,clr:0,express:0,skipped:0,skipT:0,skipping:false,seed,sw,budget:4096,earned:0,rec:[],ga:0,gv:0,ghostOut:false,drift:0,dch:0,dlv:0,turbos:[0,0,0],golds:0,rotTot:0,passed:0,hair:9,hiT:0,curve:[0],splits:{[sw]:0},wg:{},newFiles:[],genR:mulberry32(seed),spinR:mulberry32(seed^0x5bd1e995),
     t:sw*WL,t0:sw*WL,ward:sw,maxWard:sw,genWard:sw,genP:P,v:P.v,q:[],prev:null,lastZ:13,
     walls:[],orbs:[],th:-Math.PI/2,spin:0,spinV:0,spinDir:1,spinFlip:3,travel:S.travel||0,
     score:0,combo:0,comboT:0,mult:1,maxMult:1,grazes:0,emb:0,embF:0,shield:cut?0:SV.up.sh,inv:0,revives:0,
@@ -267,16 +266,8 @@ function startRun(o){
   hudStatic();unlock(sw,0);
 }
 
-function fillQ(arrive){
+function fillQ(){
   const r=S.genR,P=S.genP,pool=POOL[Math.min(S.genWard,4)];
-  S.genCount++;
-  if(S.genWard>S.stairWard+1&&S.genCount>=4&&mod(arrive,WL)<WL*.5&&S.genWard<24&&r()<.14){
-    S.stairWard=S.genWard;const id=++S.stairSeq,c=8+ri(r,4),n=P.n,k=ri(r,n),span=n-2,lane=full(n)&~(1<<k)&~(1<<((k+1)%n));
-    let q=ri(r,span),d=r()<.5?1:-1;S.stairs[id]={left:c,clean:true,seen:false,taken:0,count:c};
-    for(let i=0;i<c;i++){const g=(k+2+q)%n;S.q.push({dt:.2,m:lane&~(1<<g),st:id,sg:g});
-      if(i>0&&r()<.45)d=-d;let nq=q+d*(r()<.5?2:1);if(nq<0||nq>=span){d=-d;nq=q+d}q=clamp(nq,0,span-1)}
-    return;
-  }
   S.q.push(...PAT[pool[ri(r,pool.length)]](P.n,r));
 }
 function gaps(m,n){const g=[];for(let i=0;i<n;i++)if(!((m>>i)&1))g.push((i+.5)*TAU/n);return g}
@@ -289,16 +280,14 @@ function needed(pw,m,n,v,w,hard){
 function spawn(){
   while(S.lastZ<SPAWN&&S.walls.length<MAXW-1){
     const arrive=S.t+(S.lastZ-ZP)/S.v,wi=Math.floor(arrive/WL);
-    if(wi>S.genWard){S.genWard=wi;S.genP=WP(wi);S.genCount=0;S.q=[];S.prev=null;S.lastZ+=S.v*1.2;continue}
-    if(!S.q.length)fillQ(arrive);
+    if(wi>S.genWard){S.genWard=wi;S.genP=WP(wi);S.q=[];S.prev=null;S.lastZ+=S.v*1.2;continue}
+    if(!S.q.length)fillQ();
     const P=S.genP,w=S.q.shift();
     let m=w.m;if(m===full(P.n))m&=~(1<<ri(S.genR,P.n));
-    let tf=Math.max(w.dt*P.tight+WT/P.v,needed(S.prev,m,P.n,P.v,S.genWard));
-    if(w.st&&S.prevSg!=null)tf=Math.max(tf,WT/P.v+angD((S.prevSg+.5)*TAU/P.n,(w.sg+.5)*TAU/P.n)/OMEGA+.04);
-    else if(w.st)tf=Math.max(tf,needed(S.prev,m|(1<<w.sg),P.n,P.v,S.genWard),needed(S.prev,full(P.n)&~(1<<w.sg),P.n,P.v,S.genWard));
+    const tf=Math.max(w.dt*P.tight+WT/P.v,needed(S.prev,m,P.n,P.v,S.genWard));
     const gap=tf*P.v;
     const z=S.prev?S.lastZ+gap:S.lastZ;
-    const wall={z,m,n:P.n,minD:9,passed:false,st:w.st||0,sg:w.st?w.sg:-1};
+    const wall={z,m,n:P.n,minD:9,passed:false};
     S.walls.push(wall);
     if(S.prev&&S.orbs.length<MAXO&&S.genR()<.42&&!S.C.barren){
       const g=gaps(m,P.n),seg=TAU/P.n,gold=S.genR()<.12;
@@ -306,7 +295,7 @@ function spawn(){
       if(gold)a+=(S.genR()<.5?-1:1)*seg*.36;
       S.orbs.push({z:z-gap*.5,a,gold,alpha:1,done:false});
     }
-    S.prev={m,n:P.n};S.prevSg=w.st?w.sg:null;S.lastZ=z;
+    S.prev={m,n:P.n};S.lastZ=z;
   }
 }
 const filled=(w,a)=>{const s=Math.min(w.n-1,Math.floor(mod(a,TAU)/(TAU/w.n)));return(w.m>>s)&1};
@@ -357,7 +346,7 @@ function update(dt){
   if(!drift&&S.dch>0){turbo(S.dlv);S.dch=0;S.dlv=0}
   if(inp&&(!S.cut||S.budget>0)){
     const nt=S.th-inp*OMEGA*(drift?DRIFT:1)*dt;let ok=true;
-    for(const w of S.walls)if(overl(w)&&filled(w,nt)&&!filled(w,S.th)){ok=false;if(w.st&&S.stairs[w.st].taken)stairDirty(w.st);break}
+    for(const w of S.walls)if(overl(w)&&filled(w,nt)&&!filled(w,S.th)){ok=false;break}
     if(!ok&&S.C.brittle&&S.inv<=0&&!S.vigil){die();return}
     if(ok){S.th=nt;S.rotTot+=OMEGA*dt;if(S.cut)S.budget=Math.max(0,S.budget-dt*120)}
   }
@@ -366,16 +355,14 @@ function update(dt){
     const w=S.walls[i];
     if(overl(w)){
       if(S.inv<=0&&hitAt(w,S.th)){
-        if(w.st&&S.stairs[w.st].taken){stairDirty(w.st);S.walls.splice(i,1);i--;S.inv=.5;S.combo=0;setMult();S.shake=.5;S.flash=.3;AU.noise(.25,.2,0,'highpass',2500);const p=proj(ZP,S.th,.05);burst(p[0],p[1],24,'#7dffa8',360,.5,3);continue}
         if(S.shield>0){S.shield--;S.inv=1.2;S.walls.splice(i,1);i--;shieldBreak();continue}
         if(S.vigil){S.walls.splice(i,1);i--;gutter();continue}
         die();return;
       }
       if(S.inv<=0)w.minD=Math.min(w.minD,edgeD(w,S.th)||.004);
-    }else if(!w.passed&&w.z+WT<ZP){w.passed=true;S.passed++;if(w.st){const st=S.stairs[w.st];if(st){const on=Math.min(w.n-1,Math.floor(mod(S.th,TAU)/(TAU/w.n)))===w.sg;if(on&&st.clean){st.taken++;if(st.taken===1)toast('On the stairs · follow the lit steps');if(st.taken===st.count)skipWard()}else if(!on&&st.taken)stairDirty(w.st)}}if(w.minD<GRAZE){S.hair=Math.min(S.hair,w.minD);if(w.minD<.01745)ach('hair');graze()}}
+    }else if(!w.passed&&w.z+WT<ZP){w.passed=true;S.passed++;if(w.minD<GRAZE){S.hair=Math.min(S.hair,w.minD);if(w.minD<.01745)ach('hair');graze(w.minD)}}
   }
   S.walls=S.walls.filter(w=>w.z+WT>.25);
-  for(const w of S.walls)if(w.st&&w.z<20){const st=S.stairs[w.st];if(st&&!st.seen){st.seen=true;stairCall('STAIRWELL ↓ optional','follow the lit steps to drop a ward · or keep to the wide gap');AU.stair()}}
   const pr=.28+.1*SV.up.mag;
   for(const o of S.orbs){
     if(!o.done&&o.z<=1.1){o.done=true;if(angD(o.a,S.th)<pr){o.got=true;collect(o)}}
@@ -398,21 +385,25 @@ function turbo(l){
   S.combo+=l*2;S.comboT=comboMax();setMult();addScore((l>1?150:60)*S.mult);S.flash=Math.max(S.flash,.25);
   AU.turbo(l);vib(l>1?20:10);
   const p=proj(ZP,S.th,.05),c=l>1?'#ffffff':'#ffc861';burst(p[0],p[1],l>1?40:20,c,420,.5,3);ftext(p[0],p[1]-40,l>1?'WHITE FLARE':'flare',c,l>1?20:15);
+  clrAdd(l>1?.2:.08);
   if(l>1){ach('turbo');if(S.turbos[2]>=3)ach('turbo3')}
 }
-function stairCall(a,b){const e=$('stairc');e.querySelector('b').textContent=a;e.querySelector('span').textContent=b;e.classList.remove('on');void e.offsetWidth;e.classList.add('on')}
-function stairDirty(id){const st=S.stairs[id];if(!st||!st.clean)return;st.clean=false;S.express=0;
-  const p=proj(ZP,S.th,.05);ftext(p[0],p[1]-46,'stairwell lost','#7dffa8',14);AU.tone(330,.25,'triangle',.08,0,160)}
-function skipWard(){
+function clrAdd(x){
+  if(S.mode!=='play'||S.clr>=1)return;
+  S.clr=Math.max(0,S.clr+x/(1+.06*S.ward));
+  if(S.clr>=1)clearWard();
+}
+function clearWard(){
   const target=(S.ward+1)*WL,rem=Math.max(0,target-S.t);
   S.express++;S.skipped++;S.skipT+=rem;SV.skips++;
   const bonus=Math.floor(rem*S.v*5*S.mult*(1+.5*S.express));addScore(bonus);
   S.t=target;S.skipping=true;
-  const p=proj(ZP,S.th,.05);burst(p[0],p[1],50,'#7dffa8',480,.7,3);ftext(p[0],p[1]-50,'+'+fmt(bonus*S.hm),'#7dffa8',20);
+  const p=proj(ZP,S.th,.05);burst(p[0],p[1],50,'#ffd86a',480,.7,3);ftext(p[0],p[1]-50,'+'+fmt(bonus*S.hm),'#ffd86a',20);
   S.flash=.6;S.pulse=2;AU.skip(S.express);vib([15,20,15,20,40]);
-  ach('stair');if(S.skipped>=3)ach('express');
+  ach('clear');if(S.skipped>=3)ach('express');
 }
 function gutter(){
+  clrAdd(-.3);
   S.hits++;S.bestUnb=Math.max(S.bestUnb,S.unb);S.unb=0;S.inv=1.4;S.combo=0;setMult();S.flash=.5;S.shake=.6;S.ab=.03;
   AU.noise(.4,.25,0,'lowpass',900);AU.tone(180,.5,'sine',.3,0,60);vib(30);
   const p=proj(ZP,S.th,.05);burst(p[0],p[1],30,cssCol(),300,.6,3);ftext(p[0],p[1]-40,'guttered','#ff6b6b',16);
@@ -424,9 +415,10 @@ function setMult(){
     if(m>=3){const p=proj(ZP,S.th,.05);ftext(p[0],p[1]-36,'×'+m,'#ffb35c',26)}}
   S.mult=m;S.maxMult=Math.max(S.maxMult,m);if(m>=8)ach('x8');if(S.combo>=25)ach('chain25');
 }
-function graze(){
+function graze(md){
   S.grazes++;S.combo++;S.comboT=comboMax();setMult();
   addScore(25*S.mult);S.grz=1;
+  clrAdd(.05+(md<.035?.035:0));
   S.wg[S.ward]=(S.wg[S.ward]||0)+1;if(S.wg[S.ward]>=12)unlock(S.ward,1);
   if(S.cut){S.budget+=48;S.earned+=48}
   AU.graze(S.combo);vib(6);
@@ -439,12 +431,13 @@ function collect(o){
   S.combo++;S.comboT=comboMax();setMult();
   addScore((o.gold?60:12)*S.mult);
   if(S.cut){const b=o.gold?256:64;S.budget+=b;S.earned+=b}
+  clrAdd(o.gold?.12:.03);
   if(o.gold){unlock(S.ward,2);if(++S.golds>=5)ach('gold5')}
   AU.ember(o.gold);vib(o.gold?18:8);
   const p=proj(o.z,o.a,.16);burst(p[0],p[1],o.gold?26:12,o.gold?'#ffd86a':'#ff8a2a',o.gold?380:220,.5,3);
   if(o.gold)ftext(p[0],p[1]-26,'+5 ✦','#ffd86a',18);
 }
-function shieldBreak(){
+function shieldBreak(){clrAdd(-.3);
   S.flash=.8;S.shake=.7;S.ab=.03;AU.shield();vib([20,30,20]);
   const p=proj(ZP,S.th,.05);burst(p[0],p[1],40,'#ffffff',520,.7,3);
   banner('LAST LIGHT','the flame holds',S.hue,1);
@@ -460,14 +453,14 @@ function onWard(){
   S.maxWard=Math.max(S.maxWard,S.ward);S.sidesT=P.n;
   const sp=Math.floor(S.score);S.splits[S.ward]=sp;
   if(S.sw===0&&!S.vigil&&!S.cut&&!S.daily&&S.ward<=8)SV.wsp[S.ward]=Math.max(SV.wsp[S.ward]||0,sp);
-  const skipped=S.skipping;S.skipping=false;
+  const skipped=S.skipping;S.skipping=false;if(!skipped)S.express=0;S.clr=0;
   const ref=S.pb&&S.pb.sp&&S.pb.sp[S.ward],dl=ref!=null?'  ·  '+sgn(sp-ref)+' vs PB':'';
   unlock(S.ward,0);if(S.ward>=4)ach('w5');if(S.ward>=8)ach('w9');if(S.ward>=9)ach('beyond');S.flash=.45;S.pulse=1.5;
   AU.ward();AU.drone(.1,WROOT[S.ward%9]);vib(25);
   if(S.ward===9){
     banner('SHIFT SURVIVED','you walked out of Ward Nine'+dl,.13);
     if(!SV.beyond){SV.beyond=true;SV.embers+=150;save();toast('Escaped Ward Nine · +150 ✦')}
-  }else if(skipped)banner('↓ WARD '+P.num,'skipped by stairwell'+(S.express>1?' · express ×'+(1+.5*S.express).toFixed(1):'')+dl,.38);
+  }else if(skipped)banner('↓ WARD '+P.num,'cleared early'+(S.express>1?' · express ×'+(1+.5*S.express).toFixed(1):'')+dl,.38);
   else banner('WARD '+P.num,P.name+dl,P.hue);
   hudStatic();
 }
@@ -574,7 +567,7 @@ function cardHTML(sc,prev){
   if(ws.length>1||S.pb){const ps=S.pb&&S.pb.sp||{};
     h+='<div class="spl">'+ws.map(w=>{const r=ps[w];return`<span>${w>8?'∞':ROMAN[w]} <b>${fmt(S.splits[w])}</b>${r!=null&&w!==S.sw?` <em class="${S.splits[w]>=r?'up':'dn'}">${sgn(S.splits[w]-r)}</em>`:''}</span>`}).join('')
       +`<span>end <b>${fmt(sc)}</b>${prev?` <em class="${sc>=prev?'up':'dn'}">${sgn(sc-prev)}</em>`:''}</span></div>`}
-  if(S.skipped)h+=`<div class="spl"><span>stairwells <b>${S.skipped}</b> · skipped <b>${S.skipT.toFixed(1)}s</b></span></div>`;
+  if(S.skipped)h+=`<div class="spl"><span>cleared early <b>${S.skipped}</b> · skipped <b>${S.skipT.toFixed(1)}s</b></span></div>`;
   h+=`<div class="spl"><span>${S.daily?'daily <b>#'+dayNo()+'</b>':'code <b>'+codeOf(S.seed,S.bits)+'</b> <button id="bCopy" class="mini">copy</button>'}</span></div>`;
   return h;
 }
@@ -611,7 +604,7 @@ function menuHTML(){
   $('wmap').classList.toggle('hide',m!=='n');
   $('wmap').innerHTML=ROMAN.map((r,i)=>{const ok=i<=SV.bestWard;return`<button class="wn${ok?' r':''}${i===sw?' sel':''}" data-w="${i}" ${ok?'':'disabled'} title="${ok?'Start at Ward '+r:'Reach Ward '+r+' to start here'}">${r}</button>`}).join('');
   const db=SV.daily[today()],cb=SV.pb.c&&SV.pb.c.s,hs=headStart(sw);
-  const D={n:sw?`Start at <b>Ward ${ROMAN[sw]} · ${WARDS[sw][0]}</b> with a <b>+${fmt(hs)}</b> head start (half your best there).`:`Survive nine wards. Thread a green <b>stairwell</b> cleanly to drop a ward early; chain drops for express bonuses.`,
+  const D={n:sw?`Start at <b>Ward ${ROMAN[sw]} · ${WARDS[sw][0]}</b> with a <b>+${fmt(hs)}</b> head start (half your best there).`:`Survive nine wards. Graze, flare and grab embers to fill <b>clearance</b>: a full bar opens the next ward early. Clear wards back to back for express bonuses.`,
     d:`Daily <b>#${dayNo()}</b>: the same walls for everyone today. ${db?'Today’s best <b>'+fmt(db)+'</b>.':'No run yet today.'}`,
     c:`<b>4,096</b> ticks of steering; grazes and embers refund. ${cb?'Best <b>'+fmt(cb)+'</b>.':''}`,
     v:`No death. A hit gutters the flame and resets the chain. ${SV.vigil.unb?'Longest unbroken <b>'+SV.vigil.unb.toFixed(1)+'s</b>.':'Play as long as you like.'}`};
@@ -690,7 +683,8 @@ function hud(){
   if(sc!==S.hudScore){S.hudScore=sc;$('score').textContent=fmt(sc)}
   $('mult').textContent='×'+S.mult+(S.combo?' · chain '+S.combo:'');
   $('cbar').firstChild.style.width=(S.combo?clamp(S.comboT/comboMax(),0,1)*100:0)+'%';
-  $('wbar').firstChild.style.width=(S.ward>=9?100:mod(S.t,WL)/WL*100)+'%';
+  $('wbar').firstChild.style.width=(mod(S.t,WL)/WL*100)+'%';
+  const ce=$('clr');ce.firstChild.style.width=Math.min(1,S.clr)*100+'%';ce.classList.toggle('hot',S.clr>=.75);ce.lastChild.textContent=S.express?'clearance · express ×'+(1+.5*S.express).toFixed(1):'clearance';
   const best=bestFor();
   const de=$('dlt');
   if(S.pb){const i=Math.floor(S.t-S.t0),ref=i<S.pb.c.length?S.pb.c[i]:S.pb.s,d=sc-ref;de.textContent=sgn(d);de.className=d>=0?'up':'dn'}else de.textContent='';
@@ -779,7 +773,7 @@ function frame(now){
 function render(t){
   if(!gl)return;
   let n=0;
-  for(const w of S.walls){if(n>=MAXW)break;WA[n*4]=w.z;WA[n*4+1]=w.m;WA[n*4+2]=w.n;WA[n*4+3]=w.st&&S.stairs[w.st]?(w.sg+1)*(S.stairs[w.st].clean?1:-1):0;n++}
+  for(const w of S.walls){if(n>=MAXW)break;WA[n*4]=w.z;WA[n*4+1]=w.m;WA[n*4+2]=w.n;WA[n*4+3]=0;n++}
   let m=0;
   for(const o of S.orbs){if(m>=MAXO||o.z<.4)continue;OA[m*4]=o.z;OA[m*4+1]=o.a;OA[m*4+2]=o.gold?1:0;OA[m*4+3]=o.alpha*Math.min(1,(SPAWN-o.z)/4);m++}
   gl.uniform2f(U.R,cv.width,cv.height);gl.uniform2f(U.uShk,S.shk[0],S.shk[1]);
