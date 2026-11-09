@@ -268,7 +268,7 @@ function startRun(o){
   else if(sw)banner('CHECKPOINT '+CPN[sw],'Ward '+CPN[sw]+' in '+LEAD+' s',wardP(Math.min(sw,9)).hue);
   else banner('WARD '+P.num,P.name+(S.bits?'  ·  heat +'+Math.round((S.hm-1)*100)+'%':''),P.hue);
   hudStatic();unlock(w0,0);
-  if(SV.runs<2)toast('←/→ steer · hold Shift to cup the flame · touch: hold a side');
+  if(SV.runs<2)toast('←/→ steer · hold Shift to cup the flame · touch: hold a side',1);
 }
 
 function fillQ(){
@@ -570,7 +570,7 @@ function cardHTML(sc,prev){
 function toMenu(){if(S.mode==='over')finalize();PS=[];FT=[];$('banner').classList.remove('on');S.mode='menu';S.walls=[];S.orbs=[];S.death=0;S.dim=.55;AU.drone(.05);menuHTML();show('menu')}
 
 // ---------------------------------------------------------------- ui
-const panels=['menu','over','shop','hud','files','recs','conds'];
+const panels=['menu','over','shop','hud','files','recs','conds','more'];
 function show(id){for(const p of panels)$(p).classList.toggle('hide',p!==id);$('pause').classList.add('hide')}
 function banner(a,b,h,small){
   const e=$('banner');e.querySelector('.b1').textContent=a;e.querySelector('.b2').textContent=b||'';
@@ -578,7 +578,7 @@ function banner(a,b,h,small){
   e.querySelector('.b1').style.fontSize=small?'clamp(22px,6vw,36px)':'';
   e.classList.remove('on');void e.offsetWidth;e.classList.add('on');
 }
-function toast(t){const d=document.createElement('div');d.className='t';d.textContent=t;$('toast').appendChild(d);setTimeout(()=>d.remove(),2700)}
+function toast(t,force){if(S.mode==='play'&&!force)return;const d=document.createElement('div');d.className='t';d.textContent=t;$('toast').appendChild(d);setTimeout(()=>d.remove(),2700)}
 function pal(h){return[0,.33,.67].map(o=>.5+.5*Math.cos(TAU*(h+o)))}
 const cssCol=()=>{const c=COLORS[SV.col][1];return`rgb(${c.map(v=>v*255|0).join(',')})`};
 function countUp(el,v){const t0=performance.now(),d=Math.min(900,300+v/20);const f=()=>{const k=Math.min(1,(performance.now()-t0)/d);el.textContent=fmt(v*(1-Math.pow(1-k,3)));if(k<1)requestAnimationFrame(f)};f()}
@@ -594,31 +594,33 @@ function missionsHTML(el){
 const MODES={n:'Shift',d:'Daily',c:'4K Cut',v:'Vigil'};
 function menuHTML(){
   ensureMissions();
-  const m=SV.mode||'n',sw=startCp();
-  $('modes').innerHTML=Object.keys(MODES).map(k=>`<button role="tab" aria-selected="${k===m}" class="${k===m?'on':''}" data-mode="${k}">${MODES[k]}</button>`).join('');
-  $('wmap').classList.toggle('hide',m!=='n'||SV.cp.length<2);
-  $('wmap').innerHTML=CPN.map((r,i)=>{const ok=cpOk(i);return`<button class="wn${ok?' r':''}${i===sw?' sel':''}" data-w="${i}" ${ok?'':'disabled'} title="${ok?'Start '+LEAD+' s before Ward '+r:'Enter Ward '+r+' at ×'+CPREQ[i]+' to save this checkpoint'}">${r}</button>`}).join('');
+  const sw=startCp();
+  $('wmap').classList.toggle('hide',SV.cp.length<2);
+  $('wmap').innerHTML=CPN.map((r,i)=>{const ok=cpOk(i);return`<button class="wn${ok?' r':''}${i===sw?' sel':''}" data-w="${i}" ${ok?'':'disabled'} title="${ok?'Start just before Ward '+r:'Cross into Ward '+r+' at ×'+CPREQ[i]+' to save'}">${r}</button>`}).join('');
+  $('bPlay').innerHTML=(sw?'Begin · Ward '+CPN[sw]:'Begin')+' <small>[space]</small>';
+  $('mLine').innerHTML=SV.best?'best <b>'+fmt(SV.best)+'</b>':'';
+  moreHTML();
+}
+function moreHTML(){
   const db=SV.daily[today()],cb=SV.pb.c&&SV.pb.c.s;
-  const D={n:sw?`Start just before <b>Ward ${CPN[sw]}</b>.`:SV.cp.length<2?`Cross a ward's gate at the shown multiplier to save a checkpoint.`:`Ward I · ${SV.cp.length-1} checkpoint${SV.cp.length>2?'s':''} saved.`,
-    d:`Same walls for everyone today.`,c:`4,096 ticks of steering. Grazes refund.`,v:`No death. Stay unbroken.`};
-  const B={n:SV.best,d:db||0,c:cb||0,v:SV.vigil.s||0}[m];
-  $('mDesc').innerHTML=D[m];
-  $('bPlay').innerHTML={n:'Begin shift',d:'Play daily',c:'Begin 4K cut',v:'Begin vigil'}[m]+' <small>[space]</small>';
+  $('bDaily2').textContent='Daily #'+dayNo()+(db?' · '+fmt(db):'');
+  $('b4k2').textContent='4K Cut'+(cb?' · '+fmt(cb):'');
+  $('bVigil2').textContent='Vigil'+(SV.vigil.unb?' · '+SV.vigil.unb.toFixed(0)+'s':'');
   const hc=heatOf(SV.cond);$('bConds').textContent='Conditions'+(hc?' · +'+Math.round(hc*100)+'%':'');
-  const pg=SV.ghosts[SV.pbSeed];$('bGhost').textContent=pg?'Race PB ghost · '+fmt(pg.s):'';
-  $('mSub').classList.toggle('hide',m!=='n');$('bGhost').classList.toggle('hide',!pg);
-  $('mLine').innerHTML=`${B?'best <b>'+fmt(B)+'</b> · ':''}<span class="e">✦ ${fmt(SV.embers)}</span> · rank <b>${SV.lvl}</b>${SV.streak>1?' · '+SV.streak+'-day streak':''}`;
-  {const ms=SV.missions.filter(x=>!x.done).map(x=>({x,k:x.p/x.n})).sort((a,b)=>b.k-a.k)[0];
-   $('mNext').innerHTML=ms?`<span>next: ${MT[ms.x.id].t(ms.x.n).toLowerCase()}</span><span class="pb"><i style="width:${Math.min(1,ms.k)*100}%"></i></span><span class="e" style="color:var(--acc)">+${ms.x.r} ✦</span>`:''}
-  $('bFiles').textContent='Files '+SV.files.length+'/27';
-  $('bRecs').textContent='Records '+SV.ach.length+'/'+ACH.length;
-  $('bMute').textContent=AU.on?'Sound':'Muted';
+  const pg=SV.ghosts[SV.pbSeed];$('bGhost').textContent=pg?'Race your best ghost · '+fmt(pg.s):'';$('bGhost').classList.toggle('hide',!pg);
+  $('bFiles').textContent='Case files · '+SV.files.length+'/27';
+  $('bRecs').textContent='Records · '+SV.ach.length+'/'+ACH.length;
+  $('bMute').textContent='Sound · '+(AU.on?'on':'off');
 }
 function setMode(k){SV.mode=k;save();AU.init();AU.click();menuHTML()}
 function setStart(i){if(i<0||i>9||!cpOk(i))return;SV.startWard=i;save();AU.init();AU.click();menuHTML()}
-$('modes').addEventListener('click',e=>{const b=e.target.closest('[data-mode]');if(b)setMode(b.dataset.mode)});
 $('wmap').addEventListener('click',e=>{const b=e.target.closest('[data-w]');if(b)setStart(+b.dataset.w)});
-function beginSel(){const m=SV.mode||'n';startRun(m==='d'?{daily:1}:m==='c'?{cut:1}:m==='v'?{vigil:1}:{})}
+function beginSel(){startRun()}
+$('bMoreM').onclick=()=>{moreHTML();show('more')};
+$('bMBack').onclick=()=>{menuHTML();show('menu')};
+$('bDaily2').onclick=()=>startRun({daily:1});
+$('b4k2').onclick=()=>startRun({cut:1});
+$('bVigil2').onclick=()=>startRun({vigil:1});
 function shopHTML(){
   $('sEmb').textContent='✦ '+fmt(SV.embers);
   $('sList').innerHTML=SHOP.map(it=>{const l=SV.up[it.id],mx=it.cost.length,c=it.cost[l];
@@ -638,7 +640,7 @@ $('bFiles').onclick=()=>{filesHTML();show('files')};
 $('bGhost').onclick=()=>{const g=SV.ghosts[SV.pbSeed];if(g)startRun({seed:g.seed,fresh:1})};
 $('bEndV').onclick=endVigil;
 $('bConds').onclick=()=>{condsHTML();show('conds')};
-$('bCBack').onclick=()=>{menuHTML();show('menu')};
+$('bCBack').onclick=()=>{moreHTML();show('more')};
 $('bCPlay').onclick=()=>startRun();
 function condsHTML(){
   const h=heatOf(SV.cond);
@@ -651,7 +653,7 @@ $('over').addEventListener('click',e=>{if(e.target.id!=='bCopy')return;const t=c
   const ok=()=>{e.target.textContent='copied'},no=()=>{const r=document.createRange();r.selectNodeContents(e.target.previousElementSibling);const sel=getSelection();sel.removeAllRanges();sel.addRange(r);e.target.textContent='selected'};
   try{navigator.clipboard.writeText(t).then(ok,no)}catch(_){no()}});
 $('bRecs').onclick=()=>{recsHTML();show('recs')};
-$('bRBack').onclick=()=>{menuHTML();show('menu')};
+$('bRBack').onclick=()=>{moreHTML();show('more')};
 const MODE={n:'shift',d:'daily',c:'4K cut',v:'vigil'};
 function recsHTML(){
   rankHTML($('rRank'));missionsHTML($('rMis'));
@@ -661,14 +663,14 @@ function recsHTML(){
   $('rHist').innerHTML=SV.hist.length?`<table><tr><th>mode</th><th>score</th><th>ward</th><th>time</th><th>grz</th><th>code</th><th></th></tr>`+SV.hist.map((h,i)=>`<tr><td>${MODE[h.m]}</td><td>${fmt(h.s)}</td><td>${h.w>8?'∞':ROMAN[h.w]}</td><td>${h.t}s</td><td>${h.g}</td><td>${codeOf(h.seed,h.c||0)}</td><td><button data-h="${i}" title="Replay this seed">▶</button></td></tr>`).join('')+'</table>':'<div class="help">No shifts yet.</div>';
 }
 $('rHist').addEventListener('click',e=>{const i=e.target.dataset&&e.target.dataset.h;if(i==null)return;const h=SV.hist[+i];startRun({seed:h.seed,cut:h.m==='c',vigil:h.m==='v',cond:bitsCond(h.c||0),fresh:1})});
-$('bFBack').onclick=()=>{menuHTML();show('menu')};
+$('bFBack').onclick=()=>{moreHTML();show('more')};
 function filesHTML(){$('fCount').textContent=SV.files.length+' / 27 recovered';
   $('fList').innerHTML=WARDS.map((w,i)=>`<div class="mh">Ward ${ROMAN[i]} · ${w[0]}</div>`+[0,1,2].map(k=>{const id=i*3+k,on=SV.files.includes(id);
     return`<div class="f${on?'':' lk'}"><span>${ROMAN[i]}-${k+1}</span>${on?FILES[id]:'▒▒▒ '+FCOND[k](ROMAN[i])}</div>`}).join('')).join('')}
-$('bShop').onclick=()=>openShop('menu');
+$('bShop').onclick=()=>openShop('more');
 $('bShop2').onclick=()=>openShop('over');
-$('bBack').onclick=()=>{if(shopFrom==='over'){show('over');missionsHTML($('oMis'))}else{menuHTML();show('menu')}};
-$('bMute').onclick=()=>{SV.mute=AU.on;AU.mute(SV.mute);save();menuHTML()};
+$('bBack').onclick=()=>{if(shopFrom==='over'){show('over');missionsHTML($('oMis'))}else{moreHTML();show('more')}};
+$('bMute').onclick=()=>{SV.mute=AU.on;AU.mute(SV.mute);save();moreHTML()};
 $('bRetry').onclick=()=>{OV.lock=0;retry(0)};
 $('bMenu').onclick=toMenu;
 $('bRev').onclick=revive;
@@ -722,8 +724,7 @@ addEventListener('keydown',e=>{
   if(e.code==='KeyM'){SV.mute=AU.on;AU.mute(SV.mute);save();if(S.mode==='menu')menuHTML();return}
   const go=e.code==='Space'||e.code==='Enter';
   if(S.mode==='menu'&&!$('menu').classList.contains('hide')&&!go){const ks=Object.keys(MODES),i=ks.indexOf(SV.mode||'n');
-    if(e.code==='ArrowLeft'||e.code==='ArrowRight'){setMode(ks[mod(i+(e.code==='ArrowRight'?1:-1),ks.length)]);return}
-    if((SV.mode||'n')==='n'&&(e.code==='ArrowUp'||e.code==='ArrowDown')){e.preventDefault();{const cur=startCp(),d=e.code==='ArrowUp'?1:-1;for(let j=cur+d;j>=0&&j<=9;j+=d)if(cpOk(j)){setStart(j);break}}return}}
+    if((e.code==='ArrowUp'||e.code==='ArrowDown')){e.preventDefault();{const cur=startCp(),d=e.code==='ArrowUp'?1:-1;for(let j=cur+d;j>=0&&j<=9;j+=d)if(cpOk(j)){setStart(j);break}}return}}
   if(S.mode==='menu'&&!$('menu').classList.contains('hide')&&go){e.preventDefault();beginSel()}
   else if(S.mode==='over'&&go){e.preventDefault();if(!OV.final&&e.code==='Enter'&&!$('rev').classList.contains('hide'))revive();else{OV.lock=0;retry(0)}}
   else if(S.mode==='over'&&e.code==='KeyR'){OV.lock=0;retry(1)}
