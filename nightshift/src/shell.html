@@ -22,11 +22,8 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 #hc{position:absolute;left:50%;top:max(14px,env(safe-area-inset-top));transform:translateX(-50%);text-align:center;width:min(46vw,320px)}
 #wname{font-size:11px;letter-spacing:.3em;color:var(--dim);text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #wbar{height:3px;background:#ffffff14;margin-top:6px;position:relative}
-#clr{height:4px;background:#ffffff10;margin-top:5px;position:relative}
-#clr i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--acc),var(--gold));transition:width .15s}
-#clr b{position:absolute;left:0;top:6px;font-size:9px;letter-spacing:.2em;color:var(--acc);font-weight:400;opacity:.85;white-space:nowrap}
-#clr.hot i{box-shadow:0 0 10px var(--gold)}
-#bbar{margin-top:18px!important}
+#gate{margin-top:6px;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);min-height:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#gate.need{color:var(--bad)}#gate.ok{color:var(--ok);text-shadow:0 0 10px #8dffb088}
 #wbar i{display:block;height:100%;width:0;background:var(--fg);opacity:.7}
 #bbar{height:2px;background:#ffffff0c;margin-top:5px;position:relative}
 #bbar i{display:block;height:100%;width:0;background:var(--gold)}
@@ -152,7 +149,7 @@ button.mini{padding:1px 6px;font-size:9px;margin-left:6px}
 <canvas id="fx"></canvas>
 <div id="hud" class="hide">
   <div id="hl"><div id="score">0</div><div id="mult">×1</div><div id="dlt"></div><div id="cbar"><i></i></div></div>
-  <div id="hc"><div id="wname"></div><div id="wbar"><i></i></div><div id="clr"><i></i><b>clearance</b></div><div id="bbar"><i></i><b>BEST</b></div></div>
+  <div id="hc"><div id="wname"></div><div id="wbar"><i></i></div><div id="gate"></div><div id="bbar"><i></i><b>BEST</b></div></div>
   <div id="hr"><div id="emb">✦ 0</div><div id="shd"></div></div>
 </div>
 <div id="banner"><div class="b1"></div><div class="b2"></div></div>

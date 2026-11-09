@@ -2,7 +2,7 @@
 precision highp float;
 precision highp int;
 uniform vec2 R,uShk;
-uniform float uFog,uGA,uGV,T,uSpin,uPA,uSides,uTrav,uPulse,uFlash,uDeath,uAb,uHue,uShield,uGrz,uDim,uInv;
+uniform float uGate,uGateOk,uFog,uGA,uGV,T,uSpin,uPA,uSides,uTrav,uPulse,uFlash,uDeath,uAb,uHue,uShield,uGrz,uDim,uInv;
 uniform vec3 uPC;
 uniform vec4 uW[28];
 uniform int uWN;
@@ -56,6 +56,9 @@ vec3 scene(vec2 p){
     c*=(amb+L)*mix(.35,1.,smoothstep(.75,ZP+.2,d));
     c+=vec3(1.,.08,.04)*step(.982,n)*(.55+.45*sin(T*5.+n*70.))*(1.-ln)*smoothstep(1.5,3.,d);
     c*=exp(-.09*uFog*d);
+    if(uGate>0.){float gw=.35+.06*uGate,gd=d-uGate,band=smoothstep(0.,gw*.15,gd)*smoothstep(gw,gw*.6,gd);
+      vec3 gc=uGateOk>.75?vec3(.3,1.,.55):uGateOk>.25?vec3(.5,.5,.46):vec3(1.,.22,.18);
+      c+=gc*band*(.9+.3*sin(T*12.))*exp(-.02*uGate);}
   }else{
     float es=min(fract(fq),1.-fract(fq))*sg*r0/px,e;
     vec3 wc=mix(base,vec3(1.),.3);

@@ -19,9 +19,8 @@ One-button-pair tunnel survival. Carry a lantern down a raymarched-style polygon
 - **Wards I–IX** every 16 s: faster, more spin, new sector counts (5–8), new patterns, new key. Survive Ward Nine → endless *Beyond*.
 
 ## Skipping wards
-- **Clearance**: each ward has a meter filled by playing riskily: graze +5% (+3.5% more if within 2°), ember +3%, gold ember +12%, flare +8% / white-hot flare +20% (all ÷(1+0.06·ward)); a shield break or Vigil hit costs 30%. Full meter → the ward ends immediately: drop to the next one with bonus = skipped seconds' distance points × chain multiplier × express.
-- **Express**: clear wards early back to back → skip bonus ×1.5, ×2, ×2.5…; a ward that runs out its clock resets it.
-- **Ward map** (menu): start at any ward you've reached, with a head start of half your best score at that ward entry (recorded from Ward I starts).
+- **Checkpoints** (Smash Hit-style, earned): every ward entrance is a gate. In the last 6 s of a ward the gate shows as a ring on the floor and the HUD names its requirement: cross into Ward II–III at ×2, IV–VI at ×3, VII–IX at ×4, Beyond at ×5. Cross at or above it (ring green) → checkpoint saved; below (ring red) → missed. Shift mode only (not Daily, 4K Cut or Vigil); conditions allowed.
+- **Ward map** (menu): Ward I plus every saved checkpoint. Starting from one drops you 5 s before that ward, inside the end of the previous one; score starts at 0, ghosts and PB splits only apply to Ward I starts.
 
 ## Why these hooks (inferred from the kinds of games you build)
 | You build | Inference | Hook |
