@@ -270,19 +270,19 @@ function startRun(o){
 function fillQ(arrive){
   const r=S.genR,P=S.genP,pool=POOL[Math.min(S.genWard,4)];
   S.genCount++;
-  if(S.stairWard!==S.genWard&&S.genCount>=3&&mod(arrive,WL)<WL*.55&&S.genWard<24&&r()<.45){
-    S.stairWard=S.genWard;const id=++S.stairSeq,c=5+ri(r,2),d=r()<.5?1:-1;let g=ri(r,P.n);S.stairs[id]={left:c,clean:true,seen:false};
-    for(let i=0;i<c;i++){S.q.push({dt:.36,m:full(P.n)&~(1<<g),st:id});g=mod(g+d,P.n)}
+  if(S.genWard>S.stairWard+1&&S.genCount>=4&&mod(arrive,WL)<WL*.5&&S.genWard<24&&r()<.14){
+    S.stairWard=S.genWard;const id=++S.stairSeq,c=7+ri(r,3);let g=ri(r,P.n),d=r()<.5?1:-1;S.stairs[id]={left:c,clean:true,seen:false};
+    for(let i=0;i<c;i++){S.q.push({dt:.27,m:full(P.n)&~(1<<g),st:id});if(i>1&&r()<.3)d=-d;g=mod(g+d*(r()<.3?2:1),P.n)}
     return;
   }
   S.q.push(...PAT[pool[ri(r,pool.length)]](P.n,r));
 }
 function gaps(m,n){const g=[];for(let i=0;i<n;i++)if(!((m>>i)&1))g.push((i+.5)*TAU/n);return g}
-function needed(pw,m,n,v,w){
+function needed(pw,m,n,v,w,hard){
   if(!pw)return 0;
   const pg=gaps(pw.m,pw.n),cg=gaps(m,n);let worst=0;
   for(const a of pg){let b=1e9;for(const c of cg)b=Math.min(b,angD(a,c));worst=Math.max(worst,b)}
-  return WT/v+worst/OMEGA*1.12+Math.max(.14,.32-.03*w);
+  return hard?WT/v+worst/OMEGA+.1:WT/v+worst/OMEGA*1.12+Math.max(.14,.32-.03*w);
 }
 function spawn(){
   while(S.lastZ<SPAWN&&S.walls.length<MAXW-1){
@@ -291,7 +291,7 @@ function spawn(){
     if(!S.q.length)fillQ(arrive);
     const P=S.genP,w=S.q.shift();
     let m=w.m;if(m===full(P.n))m&=~(1<<ri(S.genR,P.n));
-    const tf=Math.max(w.dt*P.tight+WT/P.v,needed(S.prev,m,P.n,P.v,S.genWard));
+    const tf=Math.max(w.dt*P.tight+WT/P.v,needed(S.prev,m,P.n,P.v,S.genWard,!!w.st));
     const gap=tf*P.v;
     const z=S.prev?S.lastZ+gap:S.lastZ;
     const wall={z,m,n:P.n,minD:9,passed:false,st:w.st||0};
@@ -362,7 +362,7 @@ function update(dt){
     const w=S.walls[i];
     if(overl(w)){
       if(S.inv<=0&&hitAt(w,S.th)){
-        if(w.st)stairDirty(w.st);
+        if(w.st){stairDirty(w.st);S.walls.splice(i,1);i--;S.inv=.5;S.combo=0;setMult();S.shake=.5;S.flash=.3;AU.noise(.25,.2,0,'highpass',2500);const p=proj(ZP,S.th,.05);burst(p[0],p[1],24,'#7dffa8',360,.5,3);continue}
         if(S.shield>0){S.shield--;S.inv=1.2;S.walls.splice(i,1);i--;shieldBreak();continue}
         if(S.vigil){S.walls.splice(i,1);i--;gutter();continue}
         die();return;
@@ -456,7 +456,7 @@ function onWard(){
   S.maxWard=Math.max(S.maxWard,S.ward);S.sidesT=P.n;
   const sp=Math.floor(S.score);S.splits[S.ward]=sp;
   if(S.sw===0&&!S.vigil&&!S.cut&&!S.daily&&S.ward<=8)SV.wsp[S.ward]=Math.max(SV.wsp[S.ward]||0,sp);
-  const skipped=S.skipping;S.skipping=false;if(!skipped)S.express=0;
+  const skipped=S.skipping;S.skipping=false;
   const ref=S.pb&&S.pb.sp&&S.pb.sp[S.ward],dl=ref!=null?'  ·  '+sgn(sp-ref)+' vs PB':'';
   unlock(S.ward,0);if(S.ward>=4)ach('w5');if(S.ward>=8)ach('w9');if(S.ward>=9)ach('beyond');S.flash=.45;S.pulse=1.5;
   AU.ward();AU.drone(.1,WROOT[S.ward%9]);vib(25);
