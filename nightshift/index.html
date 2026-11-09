@@ -227,7 +227,7 @@ button.mini{padding:1px 6px;font-size:9px;margin-left:6px}
 <div id="pause" class="hide"><div style="display:flex;flex-direction:column;gap:14px;align-items:center">paused · press to resume<button id="bEndV" class="hide">End vigil [E]</button></div></div>
 <script>
 'use strict';
-const FS="#version 300 es\nprecision highp float;\nprecision highp int;\nuniform vec2 R,uShk;\nuniform float uFog,uGA,uGV,T,uSpin,uPA,uSides,uTrav,uPulse,uFlash,uDeath,uAb,uHue,uShield,uGrz,uDim,uInv;\nuniform vec3 uPC;\nuniform vec4 uW[28];\nuniform int uWN;\nuniform vec4 uO[16];\nuniform int uON;\nout vec4 O;\n#define TAU 6.2831853\n#define ZP 1.25\n#define WT .6\n#define HB .36\n\nvec3 pal(float h){return .5+.5*cos(TAU*(h+vec3(0.,.33,.67)));}\nfloat h21(vec2 p){p=fract(p*vec2(123.34,456.21));p+=dot(p,p+45.32);return fract(p.x*p.y);}\n\nvec3 scene(vec2 p){\n  float px=2./min(R.x,R.y);\n  p*=1.+.025*uPulse;\n  float r0=max(length(p),1e-4);\n  float a=mod(atan(p.y,p.x)-uSpin,TAU);\n  float seg=TAU/uSides;\n  float loc=mod(a,seg)-.5*seg;\n  float rho=max(r0*cos(loc),1e-4);\n  float dF=1./rho,dT=(1.-HB)/rho;\n  float d=dF,wz=0.,fq=0.,sg=1.,rz=0.,st=0.;\n  int k=0;\n  for(int i=0;i<28;i++){\n    if(i>=uWN)break;\n    vec4 w=uW[i];\n    float g=TAU/w.z,q=a/g;\n    int s=min(int(q),int(w.z)-1);\n    if(((int(w.y)>>s)&1)==0)continue;\n    float z=rho*w.x;\n    if(z>1.-HB&&z<1.&&w.x<d){d=w.x;k=1;wz=w.x;fq=q;sg=g;rz=z;st=w.w;}\n    else if(dT>w.x&&dT<w.x+WT&&dT<d){d=dT;k=2;wz=w.x;fq=q;sg=g;st=w.w;}\n  }\n  vec3 base=pal(uHue);\n  float fl=.92+.08*sin(T*31.)*sin(T*7.3);\n  float da=abs(mod(a-uPA+TAU*.5,TAU)-TAU*.5);\n  float L=fl*1.7/(1.+1.6*uFog*uFog*(d-ZP)*(d-ZP))*(.3+.7*exp(-da*da*1.1));\n  float amb=.05+.06*uPulse;\n  vec3 c;\n  if(k==0){\n    float zF=d+uTrav,q=a/seg;\n    float qe=min(fract(q),1.-fract(q))*seg*r0/px;\n    float fz=fract(zF*.5);\n    float ze=min(fz,1.-fz)*2.*rho*rho/px;\n    float ln=max(1.-smoothstep(0.,1.6,qe),1.-smoothstep(0.,1.6,ze));\n    vec2 id=vec2(floor(q),floor(zF*.5));\n    float n=h21(id),n2=h21(floor(vec2(q*4.,zF*2.)));\n    c=base*(.22+.25*n)*(.8+.2*n2)+base*ln*.5;\n    c*=(amb+L)*mix(.35,1.,smoothstep(.75,ZP+.2,d));\n    c+=vec3(1.,.08,.04)*step(.982,n)*(.55+.45*sin(T*5.+n*70.))*(1.-ln)*smoothstep(1.5,3.,d);\n    c*=exp(-.09*uFog*d);\n  }else{\n    float es=min(fract(fq),1.-fract(fq))*sg*r0/px,e,sv;\n    vec3 sc=mix(vec3(.25,1.,.5),vec3(.18,.3,.22),step(st,.7));\n    vec3 wc=st>.1?sc*(.85+.15*sin(T*8.-wz)):mix(base,vec3(1.),.3);\n    float near=exp(-max(wz-ZP,0.)*.25);\n    if(k==1){\n      e=min(es,min((rz-(1.-HB))/wz/px,(1.-rz)/wz/px));sv=(rz-(1.-HB))/HB*4.;\n      c=wc*(.28+.5*near+L*1.1);\n    }else{\n      e=min(es,(d-wz)*rho*rho/(1.-HB)/px);sv=(d-wz)/WT*4.+.5;\n      c=wc*(.12+.25*near+L*.6);\n    }\n    float eg=1.-smoothstep(0.,2.2,e);\n    c+=(st>.1?sc*1.4:mix(base,vec3(1.),.5))*eg*(1.2+L+near);\n    if(st>.1){float stp=smoothstep(.42,.5,fract(sv))*smoothstep(1.,.92,fract(sv));\n      vec3 lit=st>.7?vec3(.75,1.,.82)*(1.15+.35*sin(T*9.-wz*2.)):vec3(.35,.45,.38);\n      c=mix(vec3(.01,.06,.03),lit,.15+.85*stp)+sc*eg*2.;}\n    c*=exp(-.05*uFog*uFog*d);\n  }\n  c+=vec3(.6,.02,.03)*exp(-r0*r0*140.)*(.6+.4*sin(T*1.3));\n  for(int i=0;i<16;i++){\n    if(i>=uON)break;\n    vec4 o=uO[i];\n    float lo=mod(o.y,seg)-.5*seg;\n    float rr=.84/(o.x*cos(lo));\n    vec2 op=rr*vec2(cos(o.y+uSpin),sin(o.y+uSpin));\n    float s=.03/o.x,dd=length(p-op);\n    vec3 oc=o.z>.5?vec3(1.,.85,.3):vec3(1.,.45,.12);\n    float b=.85+.15*sin(T*12.+o.y*9.);\n    c+=oc*o.w*b*(smoothstep(s,s*.25,dd)*1.6+s*s*.08/(dd*dd+s*s*.15))*exp(-.04*uFog*o.x);\n  }\n  float lp=mod(uPA,seg)-.5*seg;\n  vec2 dir=vec2(cos(uPA+uSpin),sin(uPA+uSpin));\n  vec2 pp=dir*.965/(ZP*cos(lp));\n  vec2 dv=p-pp;\n  float pd=length(dv);\n  float al=dot(dv,-dir),pe=dot(dv,vec2(dir.y,-dir.x));\n  float fd=length(vec2(pe*1.25,al*(al>0.?.5:1.3)));\n  float fk=1.+.15*sin(T*40.)+.08*sin(T*17.);\n  float vis=(1.-uDeath)*(uInv>0.?.55+.45*sin(T*45.):1.);\n  c+=uPC*(smoothstep(.034*fk,0.,fd)*2.2+.0022/(pd*pd+.0011)*.45)*vis;\n  c+=vec3(1.)*smoothstep(.013,0.,fd)*vis;\n  if(uShield>0.)c+=uPC*.7*smoothstep(.007,0.,abs(pd-.06))*(.6+.4*sin(T*5.))*vis;\n  c+=vec3(1.,.95,.85)*uGrz*.5*exp(-pd*pd*60.);\n  if(uGV>.01){\n    float lg=mod(uGA,seg)-.5*seg;vec2 gd=vec2(cos(uGA+uSpin),sin(uGA+uSpin));\n    vec2 gp=gd*.965/(ZP*cos(lg)),gv=p-gp;float ga=dot(gv,-gd),ge=dot(gv,vec2(gd.y,-gd.x));\n    float gf=length(vec2(ge*1.25,ga*(ga>0.?.5:1.3)));\n    c+=vec3(.55,.75,1.)*uGV*(smoothstep(.03,0.,gf)*.9+.0012/(dot(gv,gv)+.0016)*.35)*(.75+.25*sin(T*9.));\n  }\n  return c;\n}\n\nvoid main(){\n  vec2 p=(gl_FragCoord.xy-.5*R)/(.5*min(R.x,R.y))+uShk;\n  vec3 c;\n  if(uAb>.001){vec2 o=p*uAb;c=vec3(scene(p+o).r,scene(p).g,scene(p-o).b);}\n  else c=scene(p);\n  c*=1.-.3*dot(p*.55,p*.55);\n  float l=dot(c,vec3(.3,.59,.11));\n  c=mix(c,vec3(l*1.3,l*.25,l*.2),uDeath);\n  c+=uFlash*vec3(1.,.92,.85);\n  c=1.-exp(-c*1.35);\n  c*=uDim;\n  c+=(h21(gl_FragCoord.xy+fract(T*7.)*317.)-.5)*.045;\n  O=vec4(max(c,0.),1.);\n}";
+const FS="#version 300 es\nprecision highp float;\nprecision highp int;\nuniform vec2 R,uShk;\nuniform float uFog,uGA,uGV,T,uSpin,uPA,uSides,uTrav,uPulse,uFlash,uDeath,uAb,uHue,uShield,uGrz,uDim,uInv;\nuniform vec3 uPC;\nuniform vec4 uW[28];\nuniform int uWN;\nuniform vec4 uO[16];\nuniform int uON;\nout vec4 O;\n#define TAU 6.2831853\n#define ZP 1.25\n#define WT .6\n#define HB .36\n\nvec3 pal(float h){return .5+.5*cos(TAU*(h+vec3(0.,.33,.67)));}\nfloat h21(vec2 p){p=fract(p*vec2(123.34,456.21));p+=dot(p,p+45.32);return fract(p.x*p.y);}\n\nvec3 scene(vec2 p){\n  float px=2./min(R.x,R.y);\n  p*=1.+.025*uPulse;\n  float r0=max(length(p),1e-4);\n  float a=mod(atan(p.y,p.x)-uSpin,TAU);\n  float seg=TAU/uSides;\n  float loc=mod(a,seg)-.5*seg;\n  float rho=max(r0*cos(loc),1e-4);\n  float dF=1./rho,dT=(1.-HB)/rho;\n  float d=dF,wz=0.,fq=0.,sg=1.,rz=0.,st=0.;\n  int k=0;\n  for(int i=0;i<28;i++){\n    if(i>=uWN)break;\n    vec4 w=uW[i];\n    float g=TAU/w.z,q=a/g;\n    int s=min(int(q),int(w.z)-1);\n    if(((int(w.y)>>s)&1)==0)continue;\n    float z=rho*w.x;\n    if(z>1.-HB&&z<1.&&w.x<d){d=w.x;k=1;wz=w.x;fq=q;sg=g;rz=z;st=w.w>0.?1.:(w.w<0.?.4:0.);}\n    else if(dT>w.x&&dT<w.x+WT&&dT<d){d=dT;k=2;wz=w.x;fq=q;sg=g;st=w.w>0.?1.:(w.w<0.?.4:0.);}\n  }\n  vec3 base=pal(uHue);\n  float fl=.92+.08*sin(T*31.)*sin(T*7.3);\n  float da=abs(mod(a-uPA+TAU*.5,TAU)-TAU*.5);\n  float L=fl*1.7/(1.+1.6*uFog*uFog*(d-ZP)*(d-ZP))*(.3+.7*exp(-da*da*1.1));\n  float amb=.05+.06*uPulse;\n  vec3 c;\n  if(k==0){\n    float zF=d+uTrav,q=a/seg;\n    float qe=min(fract(q),1.-fract(q))*seg*r0/px;\n    float fz=fract(zF*.5);\n    float ze=min(fz,1.-fz)*2.*rho*rho/px;\n    float ln=max(1.-smoothstep(0.,1.6,qe),1.-smoothstep(0.,1.6,ze));\n    vec2 id=vec2(floor(q),floor(zF*.5));\n    float n=h21(id),n2=h21(floor(vec2(q*4.,zF*2.)));\n    c=base*(.22+.25*n)*(.8+.2*n2)+base*ln*.5;\n    c*=(amb+L)*mix(.35,1.,smoothstep(.75,ZP+.2,d));\n    c+=vec3(1.,.08,.04)*step(.982,n)*(.55+.45*sin(T*5.+n*70.))*(1.-ln)*smoothstep(1.5,3.,d);\n    for(int i=0;i<28;i++){\n      if(i>=uWN)break;\n      vec4 w=uW[i];\n      if(w.w<=0.)continue;\n      float g=TAU/w.z;int s=min(int(a/g),int(w.z)-1);\n      if(s==int(w.w-.5)&&d>w.x-.5&&d<w.x+WT+.3)c+=vec3(.15,.9,.4)*(.75+.25*sin(T*10.-w.x*2.))*(1.-.5*ln);\n    }\n    c*=exp(-.09*uFog*d);\n  }else{\n    float es=min(fract(fq),1.-fract(fq))*sg*r0/px,e,sv;\n    vec3 sc=mix(vec3(.25,1.,.5),vec3(.18,.3,.22),step(st,.7));\n    vec3 wc=st>.1?sc*(.85+.15*sin(T*8.-wz)):mix(base,vec3(1.),.3);\n    float near=exp(-max(wz-ZP,0.)*.25);\n    if(k==1){\n      e=min(es,min((rz-(1.-HB))/wz/px,(1.-rz)/wz/px));sv=(rz-(1.-HB))/HB*4.;\n      c=wc*(.28+.5*near+L*1.1);\n    }else{\n      e=min(es,(d-wz)*rho*rho/(1.-HB)/px);sv=(d-wz)/WT*4.+.5;\n      c=wc*(.12+.25*near+L*.6);\n    }\n    float eg=1.-smoothstep(0.,2.2,e);\n    c+=(st>.1?sc*1.4:mix(base,vec3(1.),.5))*eg*(1.2+L+near);\n    if(st>.1){float stp=smoothstep(.42,.5,fract(sv))*smoothstep(1.,.92,fract(sv));\n      vec3 lit=st>.7?vec3(.75,1.,.82)*(1.15+.35*sin(T*9.-wz*2.)):vec3(.35,.45,.38);\n      c=mix(vec3(.01,.06,.03),lit,.15+.85*stp)+sc*eg*2.;}\n    c*=exp(-.05*uFog*uFog*d);\n  }\n  c+=vec3(.6,.02,.03)*exp(-r0*r0*140.)*(.6+.4*sin(T*1.3));\n  for(int i=0;i<16;i++){\n    if(i>=uON)break;\n    vec4 o=uO[i];\n    float lo=mod(o.y,seg)-.5*seg;\n    float rr=.84/(o.x*cos(lo));\n    vec2 op=rr*vec2(cos(o.y+uSpin),sin(o.y+uSpin));\n    float s=.03/o.x,dd=length(p-op);\n    vec3 oc=o.z>.5?vec3(1.,.85,.3):vec3(1.,.45,.12);\n    float b=.85+.15*sin(T*12.+o.y*9.);\n    c+=oc*o.w*b*(smoothstep(s,s*.25,dd)*1.6+s*s*.08/(dd*dd+s*s*.15))*exp(-.04*uFog*o.x);\n  }\n  float lp=mod(uPA,seg)-.5*seg;\n  vec2 dir=vec2(cos(uPA+uSpin),sin(uPA+uSpin));\n  vec2 pp=dir*.965/(ZP*cos(lp));\n  vec2 dv=p-pp;\n  float pd=length(dv);\n  float al=dot(dv,-dir),pe=dot(dv,vec2(dir.y,-dir.x));\n  float fd=length(vec2(pe*1.25,al*(al>0.?.5:1.3)));\n  float fk=1.+.15*sin(T*40.)+.08*sin(T*17.);\n  float vis=(1.-uDeath)*(uInv>0.?.55+.45*sin(T*45.):1.);\n  c+=uPC*(smoothstep(.034*fk,0.,fd)*2.2+.0022/(pd*pd+.0011)*.45)*vis;\n  c+=vec3(1.)*smoothstep(.013,0.,fd)*vis;\n  if(uShield>0.)c+=uPC*.7*smoothstep(.007,0.,abs(pd-.06))*(.6+.4*sin(T*5.))*vis;\n  c+=vec3(1.,.95,.85)*uGrz*.5*exp(-pd*pd*60.);\n  if(uGV>.01){\n    float lg=mod(uGA,seg)-.5*seg;vec2 gd=vec2(cos(uGA+uSpin),sin(uGA+uSpin));\n    vec2 gp=gd*.965/(ZP*cos(lg)),gv=p-gp;float ga=dot(gv,-gd),ge=dot(gv,vec2(gd.y,-gd.x));\n    float gf=length(vec2(ge*1.25,ga*(ga>0.?.5:1.3)));\n    c+=vec3(.55,.75,1.)*uGV*(smoothstep(.03,0.,gf)*.9+.0012/(dot(gv,gv)+.0016)*.35)*(.75+.25*sin(T*9.));\n  }\n  return c;\n}\n\nvoid main(){\n  vec2 p=(gl_FragCoord.xy-.5*R)/(.5*min(R.x,R.y))+uShk;\n  vec3 c;\n  if(uAb>.001){vec2 o=p*uAb;c=vec3(scene(p+o).r,scene(p).g,scene(p-o).b);}\n  else c=scene(p);\n  c*=1.-.3*dot(p*.55,p*.55);\n  float l=dot(c,vec3(.3,.59,.11));\n  c=mix(c,vec3(l*1.3,l*.25,l*.2),uDeath);\n  c+=uFlash*vec3(1.,.92,.85);\n  c=1.-exp(-c*1.35);\n  c*=uDim;\n  c+=(h21(gl_FragCoord.xy+fract(T*7.)*317.)-.5)*.045;\n  O=vec4(max(c,0.),1.);\n}";
 const TAU=Math.PI*2,WT=.6,ZP=1.25,SPAWN=32,WL=16,OMEGA=5.2,FORG=.06,GRAZE=.25,TICK=1/60,DRIFT=.72,MAXW=28,MAXO=16;
 const $=i=>document.getElementById(i);
 const mod=(a,b)=>((a%b)+b)%b,clamp=(x,a,b)=>x<a?a:x>b?b:x;
@@ -499,8 +499,10 @@ function fillQ(arrive){
   const r=S.genR,P=S.genP,pool=POOL[Math.min(S.genWard,4)];
   S.genCount++;
   if(S.genWard>S.stairWard+1&&S.genCount>=4&&mod(arrive,WL)<WL*.5&&S.genWard<24&&r()<.14){
-    S.stairWard=S.genWard;const id=++S.stairSeq,c=7+ri(r,3);let g=ri(r,P.n),d=r()<.5?1:-1;S.stairs[id]={left:c,clean:true,seen:false};
-    for(let i=0;i<c;i++){S.q.push({dt:.27,m:full(P.n)&~(1<<g),st:id});if(i>1&&r()<.3)d=-d;g=mod(g+d*(r()<.3?2:1),P.n)}
+    S.stairWard=S.genWard;const id=++S.stairSeq,c=8+ri(r,4),n=P.n,k=ri(r,n),span=n-2,lane=full(n)&~(1<<k)&~(1<<((k+1)%n));
+    let q=ri(r,span),d=r()<.5?1:-1;S.stairs[id]={left:c,clean:true,seen:false,taken:0,count:c};
+    for(let i=0;i<c;i++){const g=(k+2+q)%n;S.q.push({dt:.2,m:lane&~(1<<g),st:id,sg:g});
+      if(i>0&&r()<.45)d=-d;let nq=q+d*(r()<.5?2:1);if(nq<0||nq>=span){d=-d;nq=q+d}q=clamp(nq,0,span-1)}
     return;
   }
   S.q.push(...PAT[pool[ri(r,pool.length)]](P.n,r));
@@ -519,10 +521,12 @@ function spawn(){
     if(!S.q.length)fillQ(arrive);
     const P=S.genP,w=S.q.shift();
     let m=w.m;if(m===full(P.n))m&=~(1<<ri(S.genR,P.n));
-    const tf=Math.max(w.dt*P.tight+WT/P.v,needed(S.prev,m,P.n,P.v,S.genWard,!!w.st));
+    let tf=Math.max(w.dt*P.tight+WT/P.v,needed(S.prev,m,P.n,P.v,S.genWard));
+    if(w.st&&S.prevSg!=null)tf=Math.max(tf,WT/P.v+angD((S.prevSg+.5)*TAU/P.n,(w.sg+.5)*TAU/P.n)/OMEGA+.04);
+    else if(w.st)tf=Math.max(tf,needed(S.prev,m|(1<<w.sg),P.n,P.v,S.genWard),needed(S.prev,full(P.n)&~(1<<w.sg),P.n,P.v,S.genWard));
     const gap=tf*P.v;
     const z=S.prev?S.lastZ+gap:S.lastZ;
-    const wall={z,m,n:P.n,minD:9,passed:false,st:w.st||0};
+    const wall={z,m,n:P.n,minD:9,passed:false,st:w.st||0,sg:w.st?w.sg:-1};
     S.walls.push(wall);
     if(S.prev&&S.orbs.length<MAXO&&S.genR()<.42&&!S.C.barren){
       const g=gaps(m,P.n),seg=TAU/P.n,gold=S.genR()<.12;
@@ -530,7 +534,7 @@ function spawn(){
       if(gold)a+=(S.genR()<.5?-1:1)*seg*.36;
       S.orbs.push({z:z-gap*.5,a,gold,alpha:1,done:false});
     }
-    S.prev={m,n:P.n};S.lastZ=z;
+    S.prev={m,n:P.n};S.prevSg=w.st?w.sg:null;S.lastZ=z;
   }
 }
 const filled=(w,a)=>{const s=Math.min(w.n-1,Math.floor(mod(a,TAU)/(TAU/w.n)));return(w.m>>s)&1};
@@ -581,7 +585,7 @@ function update(dt){
   if(!drift&&S.dch>0){turbo(S.dlv);S.dch=0;S.dlv=0}
   if(inp&&(!S.cut||S.budget>0)){
     const nt=S.th-inp*OMEGA*(drift?DRIFT:1)*dt;let ok=true;
-    for(const w of S.walls)if(overl(w)&&filled(w,nt)&&!filled(w,S.th)){ok=false;if(w.st)stairDirty(w.st);break}
+    for(const w of S.walls)if(overl(w)&&filled(w,nt)&&!filled(w,S.th)){ok=false;if(w.st&&S.stairs[w.st].taken)stairDirty(w.st);break}
     if(!ok&&S.C.brittle&&S.inv<=0&&!S.vigil){die();return}
     if(ok){S.th=nt;S.rotTot+=OMEGA*dt;if(S.cut)S.budget=Math.max(0,S.budget-dt*120)}
   }
@@ -590,16 +594,16 @@ function update(dt){
     const w=S.walls[i];
     if(overl(w)){
       if(S.inv<=0&&hitAt(w,S.th)){
-        if(w.st){stairDirty(w.st);S.walls.splice(i,1);i--;S.inv=.5;S.combo=0;setMult();S.shake=.5;S.flash=.3;AU.noise(.25,.2,0,'highpass',2500);const p=proj(ZP,S.th,.05);burst(p[0],p[1],24,'#7dffa8',360,.5,3);continue}
+        if(w.st&&S.stairs[w.st].taken){stairDirty(w.st);S.walls.splice(i,1);i--;S.inv=.5;S.combo=0;setMult();S.shake=.5;S.flash=.3;AU.noise(.25,.2,0,'highpass',2500);const p=proj(ZP,S.th,.05);burst(p[0],p[1],24,'#7dffa8',360,.5,3);continue}
         if(S.shield>0){S.shield--;S.inv=1.2;S.walls.splice(i,1);i--;shieldBreak();continue}
         if(S.vigil){S.walls.splice(i,1);i--;gutter();continue}
         die();return;
       }
       if(S.inv<=0)w.minD=Math.min(w.minD,edgeD(w,S.th)||.004);
-    }else if(!w.passed&&w.z+WT<ZP){w.passed=true;S.passed++;if(w.st){const st=S.stairs[w.st];if(st&&--st.left===0&&st.clean)skipWard()}if(w.minD<GRAZE){S.hair=Math.min(S.hair,w.minD);if(w.minD<.01745)ach('hair');graze()}}
+    }else if(!w.passed&&w.z+WT<ZP){w.passed=true;S.passed++;if(w.st){const st=S.stairs[w.st];if(st){const on=Math.min(w.n-1,Math.floor(mod(S.th,TAU)/(TAU/w.n)))===w.sg;if(on&&st.clean){st.taken++;if(st.taken===1)toast('On the stairs · follow the lit steps');if(st.taken===st.count)skipWard()}else if(!on&&st.taken)stairDirty(w.st)}}if(w.minD<GRAZE){S.hair=Math.min(S.hair,w.minD);if(w.minD<.01745)ach('hair');graze()}}
   }
   S.walls=S.walls.filter(w=>w.z+WT>.25);
-  for(const w of S.walls)if(w.st&&w.z<20){const st=S.stairs[w.st];if(st&&!st.seen){st.seen=true;stairCall('STAIRWELL ↓','thread it without touching a wall to drop a ward');AU.stair()}}
+  for(const w of S.walls)if(w.st&&w.z<20){const st=S.stairs[w.st];if(st&&!st.seen){st.seen=true;stairCall('STAIRWELL ↓ optional','follow the lit steps to drop a ward · or keep to the wide gap');AU.stair()}}
   const pr=.28+.1*SV.up.mag;
   for(const o of S.orbs){
     if(!o.done&&o.z<=1.1){o.done=true;if(angD(o.a,S.th)<pr){o.got=true;collect(o)}}
@@ -1003,7 +1007,7 @@ function frame(now){
 function render(t){
   if(!gl)return;
   let n=0;
-  for(const w of S.walls){if(n>=MAXW)break;WA[n*4]=w.z;WA[n*4+1]=w.m;WA[n*4+2]=w.n;WA[n*4+3]=w.st&&S.stairs[w.st]?(S.stairs[w.st].clean?1:.4):0;n++}
+  for(const w of S.walls){if(n>=MAXW)break;WA[n*4]=w.z;WA[n*4+1]=w.m;WA[n*4+2]=w.n;WA[n*4+3]=w.st&&S.stairs[w.st]?(w.sg+1)*(S.stairs[w.st].clean?1:-1):0;n++}
   let m=0;
   for(const o of S.orbs){if(m>=MAXO||o.z<.4)continue;OA[m*4]=o.z;OA[m*4+1]=o.a;OA[m*4+2]=o.gold?1:0;OA[m*4+3]=o.alpha*Math.min(1,(SPAWN-o.z)/4);m++}
   gl.uniform2f(U.R,cv.width,cv.height);gl.uniform2f(U.uShk,S.shk[0],S.shk[1]);

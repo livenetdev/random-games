@@ -271,8 +271,10 @@ function fillQ(arrive){
   const r=S.genR,P=S.genP,pool=POOL[Math.min(S.genWard,4)];
   S.genCount++;
   if(S.genWard>S.stairWard+1&&S.genCount>=4&&mod(arrive,WL)<WL*.5&&S.genWard<24&&r()<.14){
-    S.stairWard=S.genWard;const id=++S.stairSeq,c=7+ri(r,3);let g=ri(r,P.n),d=r()<.5?1:-1;S.stairs[id]={left:c,clean:true,seen:false};
-    for(let i=0;i<c;i++){S.q.push({dt:.27,m:full(P.n)&~(1<<g),st:id});if(i>1&&r()<.3)d=-d;g=mod(g+d*(r()<.3?2:1),P.n)}
+    S.stairWard=S.genWard;const id=++S.stairSeq,c=8+ri(r,4),n=P.n,k=ri(r,n),span=n-2,lane=full(n)&~(1<<k)&~(1<<((k+1)%n));
+    let q=ri(r,span),d=r()<.5?1:-1;S.stairs[id]={left:c,clean:true,seen:false,taken:0,count:c};
+    for(let i=0;i<c;i++){const g=(k+2+q)%n;S.q.push({dt:.2,m:lane&~(1<<g),st:id,sg:g});
+      if(i>0&&r()<.45)d=-d;let nq=q+d*(r()<.5?2:1);if(nq<0||nq>=span){d=-d;nq=q+d}q=clamp(nq,0,span-1)}
     return;
   }
   S.q.push(...PAT[pool[ri(r,pool.length)]](P.n,r));
@@ -291,10 +293,12 @@ function spawn(){
     if(!S.q.length)fillQ(arrive);
     const P=S.genP,w=S.q.shift();
     let m=w.m;if(m===full(P.n))m&=~(1<<ri(S.genR,P.n));
-    const tf=Math.max(w.dt*P.tight+WT/P.v,needed(S.prev,m,P.n,P.v,S.genWard,!!w.st));
+    let tf=Math.max(w.dt*P.tight+WT/P.v,needed(S.prev,m,P.n,P.v,S.genWard));
+    if(w.st&&S.prevSg!=null)tf=Math.max(tf,WT/P.v+angD((S.prevSg+.5)*TAU/P.n,(w.sg+.5)*TAU/P.n)/OMEGA+.04);
+    else if(w.st)tf=Math.max(tf,needed(S.prev,m|(1<<w.sg),P.n,P.v,S.genWard),needed(S.prev,full(P.n)&~(1<<w.sg),P.n,P.v,S.genWard));
     const gap=tf*P.v;
     const z=S.prev?S.lastZ+gap:S.lastZ;
-    const wall={z,m,n:P.n,minD:9,passed:false,st:w.st||0};
+    const wall={z,m,n:P.n,minD:9,passed:false,st:w.st||0,sg:w.st?w.sg:-1};
     S.walls.push(wall);
     if(S.prev&&S.orbs.length<MAXO&&S.genR()<.42&&!S.C.barren){
       const g=gaps(m,P.n),seg=TAU/P.n,gold=S.genR()<.12;
@@ -302,7 +306,7 @@ function spawn(){
       if(gold)a+=(S.genR()<.5?-1:1)*seg*.36;
       S.orbs.push({z:z-gap*.5,a,gold,alpha:1,done:false});
     }
-    S.prev={m,n:P.n};S.lastZ=z;
+    S.prev={m,n:P.n};S.prevSg=w.st?w.sg:null;S.lastZ=z;
   }
 }
 const filled=(w,a)=>{const s=Math.min(w.n-1,Math.floor(mod(a,TAU)/(TAU/w.n)));return(w.m>>s)&1};
@@ -353,7 +357,7 @@ function update(dt){
   if(!drift&&S.dch>0){turbo(S.dlv);S.dch=0;S.dlv=0}
   if(inp&&(!S.cut||S.budget>0)){
     const nt=S.th-inp*OMEGA*(drift?DRIFT:1)*dt;let ok=true;
-    for(const w of S.walls)if(overl(w)&&filled(w,nt)&&!filled(w,S.th)){ok=false;if(w.st)stairDirty(w.st);break}
+    for(const w of S.walls)if(overl(w)&&filled(w,nt)&&!filled(w,S.th)){ok=false;if(w.st&&S.stairs[w.st].taken)stairDirty(w.st);break}
     if(!ok&&S.C.brittle&&S.inv<=0&&!S.vigil){die();return}
     if(ok){S.th=nt;S.rotTot+=OMEGA*dt;if(S.cut)S.budget=Math.max(0,S.budget-dt*120)}
   }
@@ -362,16 +366,16 @@ function update(dt){
     const w=S.walls[i];
     if(overl(w)){
       if(S.inv<=0&&hitAt(w,S.th)){
-        if(w.st){stairDirty(w.st);S.walls.splice(i,1);i--;S.inv=.5;S.combo=0;setMult();S.shake=.5;S.flash=.3;AU.noise(.25,.2,0,'highpass',2500);const p=proj(ZP,S.th,.05);burst(p[0],p[1],24,'#7dffa8',360,.5,3);continue}
+        if(w.st&&S.stairs[w.st].taken){stairDirty(w.st);S.walls.splice(i,1);i--;S.inv=.5;S.combo=0;setMult();S.shake=.5;S.flash=.3;AU.noise(.25,.2,0,'highpass',2500);const p=proj(ZP,S.th,.05);burst(p[0],p[1],24,'#7dffa8',360,.5,3);continue}
         if(S.shield>0){S.shield--;S.inv=1.2;S.walls.splice(i,1);i--;shieldBreak();continue}
         if(S.vigil){S.walls.splice(i,1);i--;gutter();continue}
         die();return;
       }
       if(S.inv<=0)w.minD=Math.min(w.minD,edgeD(w,S.th)||.004);
-    }else if(!w.passed&&w.z+WT<ZP){w.passed=true;S.passed++;if(w.st){const st=S.stairs[w.st];if(st&&--st.left===0&&st.clean)skipWard()}if(w.minD<GRAZE){S.hair=Math.min(S.hair,w.minD);if(w.minD<.01745)ach('hair');graze()}}
+    }else if(!w.passed&&w.z+WT<ZP){w.passed=true;S.passed++;if(w.st){const st=S.stairs[w.st];if(st){const on=Math.min(w.n-1,Math.floor(mod(S.th,TAU)/(TAU/w.n)))===w.sg;if(on&&st.clean){st.taken++;if(st.taken===1)toast('On the stairs · follow the lit steps');if(st.taken===st.count)skipWard()}else if(!on&&st.taken)stairDirty(w.st)}}if(w.minD<GRAZE){S.hair=Math.min(S.hair,w.minD);if(w.minD<.01745)ach('hair');graze()}}
   }
   S.walls=S.walls.filter(w=>w.z+WT>.25);
-  for(const w of S.walls)if(w.st&&w.z<20){const st=S.stairs[w.st];if(st&&!st.seen){st.seen=true;stairCall('STAIRWELL ↓','thread it without touching a wall to drop a ward');AU.stair()}}
+  for(const w of S.walls)if(w.st&&w.z<20){const st=S.stairs[w.st];if(st&&!st.seen){st.seen=true;stairCall('STAIRWELL ↓ optional','follow the lit steps to drop a ward · or keep to the wide gap');AU.stair()}}
   const pr=.28+.1*SV.up.mag;
   for(const o of S.orbs){
     if(!o.done&&o.z<=1.1){o.done=true;if(angD(o.a,S.th)<pr){o.got=true;collect(o)}}
@@ -775,7 +779,7 @@ function frame(now){
 function render(t){
   if(!gl)return;
   let n=0;
-  for(const w of S.walls){if(n>=MAXW)break;WA[n*4]=w.z;WA[n*4+1]=w.m;WA[n*4+2]=w.n;WA[n*4+3]=w.st&&S.stairs[w.st]?(S.stairs[w.st].clean?1:.4):0;n++}
+  for(const w of S.walls){if(n>=MAXW)break;WA[n*4]=w.z;WA[n*4+1]=w.m;WA[n*4+2]=w.n;WA[n*4+3]=w.st&&S.stairs[w.st]?(w.sg+1)*(S.stairs[w.st].clean?1:-1):0;n++}
   let m=0;
   for(const o of S.orbs){if(m>=MAXO||o.z<.4)continue;OA[m*4]=o.z;OA[m*4+1]=o.a;OA[m*4+2]=o.gold?1:0;OA[m*4+3]=o.alpha*Math.min(1,(SPAWN-o.z)/4);m++}
   gl.uniform2f(U.R,cv.width,cv.height);gl.uniform2f(U.uShk,S.shk[0],S.shk[1]);

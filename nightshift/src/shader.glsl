@@ -35,8 +35,8 @@ vec3 scene(vec2 p){
     int s=min(int(q),int(w.z)-1);
     if(((int(w.y)>>s)&1)==0)continue;
     float z=rho*w.x;
-    if(z>1.-HB&&z<1.&&w.x<d){d=w.x;k=1;wz=w.x;fq=q;sg=g;rz=z;st=w.w;}
-    else if(dT>w.x&&dT<w.x+WT&&dT<d){d=dT;k=2;wz=w.x;fq=q;sg=g;st=w.w;}
+    if(z>1.-HB&&z<1.&&w.x<d){d=w.x;k=1;wz=w.x;fq=q;sg=g;rz=z;st=w.w>0.?1.:(w.w<0.?.4:0.);}
+    else if(dT>w.x&&dT<w.x+WT&&dT<d){d=dT;k=2;wz=w.x;fq=q;sg=g;st=w.w>0.?1.:(w.w<0.?.4:0.);}
   }
   vec3 base=pal(uHue);
   float fl=.92+.08*sin(T*31.)*sin(T*7.3);
@@ -55,6 +55,13 @@ vec3 scene(vec2 p){
     c=base*(.22+.25*n)*(.8+.2*n2)+base*ln*.5;
     c*=(amb+L)*mix(.35,1.,smoothstep(.75,ZP+.2,d));
     c+=vec3(1.,.08,.04)*step(.982,n)*(.55+.45*sin(T*5.+n*70.))*(1.-ln)*smoothstep(1.5,3.,d);
+    for(int i=0;i<28;i++){
+      if(i>=uWN)break;
+      vec4 w=uW[i];
+      if(w.w<=0.)continue;
+      float g=TAU/w.z;int s=min(int(a/g),int(w.z)-1);
+      if(s==int(w.w-.5)&&d>w.x-.5&&d<w.x+WT+.3)c+=vec3(.15,.9,.4)*(.75+.25*sin(T*10.-w.x*2.))*(1.-.5*ln);
+    }
     c*=exp(-.09*uFog*d);
   }else{
     float es=min(fract(fq),1.-fract(fq))*sg*r0/px,e,sv;
