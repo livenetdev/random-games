@@ -268,6 +268,7 @@ function startRun(o){
   else if(sw)banner('CHECKPOINT '+CPN[sw],'Ward '+CPN[sw]+' in '+LEAD+' s',wardP(Math.min(sw,9)).hue);
   else banner('WARD '+P.num,P.name+(S.bits?'  ·  heat +'+Math.round((S.hm-1)*100)+'%':''),P.hue);
   hudStatic();unlock(w0,0);
+  if(SV.runs<2)toast('←/→ steer · hold Shift to cup the flame · touch: hold a side');
 }
 
 function fillQ(){
@@ -487,7 +488,9 @@ function endRun(){
   if(tn<4&&S.ward<9)near.push(tn.toFixed(1)+'s from Ward '+(wardP(S.ward+1).num));
   for(const m of SV.missions){if(m.done)continue;const T=MT[m.id],v=T.run?st[T.st]:m.p+st[T.st];
     if(v<m.n&&v>=m.n*.7){near.push('almost: '+T.t(m.n).toLowerCase()+' ('+Math.floor(v)+'/'+m.n+')');break}}
-  $('oNear').innerHTML=near.slice(0,2).map(t=>'<div>'+t+'</div>').join('');
+  $('oNear').innerHTML=near.slice(0,1).map(t=>'<div>'+t+'</div>').join('');
+  const rt=S.t-S.t0;$('oSum').innerHTML=`<span><b>${rt.toFixed(1)}s</b></span><span><b>${S.grazes}</b> grazes</span>${S.emb?`<span class="e">+${S.emb} ✦</span>`:''}${S.newFiles.length?`<span class="g">▤ new case file</span>`:''}`;
+  $('oMore').classList.add('hide');$('bMore').setAttribute('aria-expanded','false');$('bMore').textContent='details';
   const can=!S.daily&&!S.cut&&!S.vigil&&S.revives<1&&SV.embers+S.emb>=reviveCost()&&(sc>=prev*.5||S.ward>=SV.bestWard);
   $('oPost').classList.add('hide');
   if(can){
@@ -542,6 +545,10 @@ function finalize(){
   if(SV.streak>=7)ach('week');if(SV.lvl>=17)ach('rank17');
   save();
   $('oRew').innerHTML=rew.map(r=>'<span>'+r+'</span>').join('');
+  {const tot=earned,lv=SV.lvl>l0,md=SV.missions.filter(m=>m.claimed).length,es=$('oSum').querySelector('.e');
+   if(es)es.remove();if(tot)$('oSum').insertAdjacentHTML('beforeend',`<span class="e">+${tot} ✦</span>`);
+   if(md)$('oSum').insertAdjacentHTML('beforeend',`<span class="g">✓ ${md} mission${md>1?'s':''}</span>`);
+   if(lv)$('oSum').insertAdjacentHTML('beforeend',`<span class="g">rank ${SV.lvl}</span>`)}
   rankHTML($('oRank'),SV.lvl>l0?0:x0);
   missionsHTML($('oMis'));
   if(OV.newBest)setTimeout(()=>AU.record(),300);
@@ -587,26 +594,25 @@ function missionsHTML(el){
 const MODES={n:'Shift',d:'Daily',c:'4K Cut',v:'Vigil'};
 function menuHTML(){
   ensureMissions();
-  rankHTML($('mRank'));
   const m=SV.mode||'n',sw=startCp();
   $('modes').innerHTML=Object.keys(MODES).map(k=>`<button role="tab" aria-selected="${k===m}" class="${k===m?'on':''}" data-mode="${k}">${MODES[k]}</button>`).join('');
-  $('wmap').classList.toggle('hide',m!=='n');
+  $('wmap').classList.toggle('hide',m!=='n'||SV.cp.length<2);
   $('wmap').innerHTML=CPN.map((r,i)=>{const ok=cpOk(i);return`<button class="wn${ok?' r':''}${i===sw?' sel':''}" data-w="${i}" ${ok?'':'disabled'} title="${ok?'Start '+LEAD+' s before Ward '+r:'Enter Ward '+r+' at ×'+CPREQ[i]+' to save this checkpoint'}">${r}</button>`}).join('');
   const db=SV.daily[today()],cb=SV.pb.c&&SV.pb.c.s;
-  const D={n:sw?`Start ${LEAD} s before <b>Ward ${CPN[sw]}${sw<9?' · '+WARDS[sw][0]:''}</b>. Checkpoints saved: <b>${SV.cp.length}/10</b>.`:`Survive the wards. Enter a ward at its gate multiplier (×2 to ×5) to <b>save a checkpoint</b>; saved checkpoints let you start 5 s before that ward. Saved: <b>${SV.cp.length}/10</b>.`,
-    d:`Daily <b>#${dayNo()}</b>: the same walls for everyone today. ${db?'Today’s best <b>'+fmt(db)+'</b>.':'No run yet today.'}`,
-    c:`<b>4,096</b> ticks of steering; grazes and embers refund. ${cb?'Best <b>'+fmt(cb)+'</b>.':''}`,
-    v:`No death. A hit gutters the flame and resets the chain. ${SV.vigil.unb?'Longest unbroken <b>'+SV.vigil.unb.toFixed(1)+'s</b>.':'Play as long as you like.'}`};
+  const D={n:sw?`Start just before <b>Ward ${CPN[sw]}</b>.`:SV.cp.length<2?`Cross a ward's gate at the shown multiplier to save a checkpoint.`:`Ward I · ${SV.cp.length-1} checkpoint${SV.cp.length>2?'s':''} saved.`,
+    d:`Same walls for everyone today.`,c:`4,096 ticks of steering. Grazes refund.`,v:`No death. Stay unbroken.`};
+  const B={n:SV.best,d:db||0,c:cb||0,v:SV.vigil.s||0}[m];
   $('mDesc').innerHTML=D[m];
   $('bPlay').innerHTML={n:'Begin shift',d:'Play daily',c:'Begin 4K cut',v:'Begin vigil'}[m]+' <small>[space]</small>';
   const hc=heatOf(SV.cond);$('bConds').textContent='Conditions'+(hc?' · +'+Math.round(hc*100)+'%':'');
   const pg=SV.ghosts[SV.pbSeed];$('bGhost').textContent=pg?'Race PB ghost · '+fmt(pg.s):'';
   $('mSub').classList.toggle('hide',m!=='n');$('bGhost').classList.toggle('hide',!pg);
-  $('mStats').innerHTML=`<span>best <b>${fmt(SV.best)}</b></span><span>deepest <b>Ward ${SV.bestWard>=9&&SV.beyond?'∞':ROMAN[Math.min(8,SV.bestWard)]}</b></span><span class="e">✦ ${fmt(SV.embers)}</span>${SV.streak?`<span>streak <b>${SV.streak}d</b></span>`:''}`;
-  missionsHTML($('mList'));
+  $('mLine').innerHTML=`${B?'best <b>'+fmt(B)+'</b> · ':''}<span class="e">✦ ${fmt(SV.embers)}</span> · rank <b>${SV.lvl}</b>${SV.streak>1?' · '+SV.streak+'-day streak':''}`;
+  {const ms=SV.missions.filter(x=>!x.done).map(x=>({x,k:x.p/x.n})).sort((a,b)=>b.k-a.k)[0];
+   $('mNext').innerHTML=ms?`<span>next: ${MT[ms.x.id].t(ms.x.n).toLowerCase()}</span><span class="pb"><i style="width:${Math.min(1,ms.k)*100}%"></i></span><span class="e" style="color:var(--acc)">+${ms.x.r} ✦</span>`:''}
   $('bFiles').textContent='Files '+SV.files.length+'/27';
   $('bRecs').textContent='Records '+SV.ach.length+'/'+ACH.length;
-  $('bMute').textContent='Sound '+(AU.on?'on':'off');
+  $('bMute').textContent=AU.on?'Sound':'Muted';
 }
 function setMode(k){SV.mode=k;save();AU.init();AU.click();menuHTML()}
 function setStart(i){if(i<0||i>9||!cpOk(i))return;SV.startWard=i;save();AU.init();AU.click();menuHTML()}
@@ -648,6 +654,7 @@ $('bRecs').onclick=()=>{recsHTML();show('recs')};
 $('bRBack').onclick=()=>{menuHTML();show('menu')};
 const MODE={n:'shift',d:'daily',c:'4K cut',v:'vigil'};
 function recsHTML(){
+  rankHTML($('rRank'));missionsHTML($('rMis'));
   const tot=SV.hist.reduce((a,h)=>a+h.t,0);
   $('rLife').innerHTML=`<span>shifts <b>${fmt(SV.runs)}</b></span><span>grazes <b>${fmt(SV.grazeTotal)}</b></span><span>best <b>${fmt(SV.best)}</b></span><span>hairline <b>${SV.hairBest<9?(SV.hairBest*180/Math.PI).toFixed(1)+'°':'—'}</b></span><span>ghosts <b>${Object.keys(SV.ghosts).length}</b></span>`;
   $('rAch').innerHTML=ACH.map(a=>{const on=SV.ach.includes(a[0]);return`<div class="ac${on?' on':''}"><b>${on?'★':'☆'} ${a[1]}</b><span>${a[2]}</span><em>+${a[3]}</em></div>`}).join('');
@@ -665,12 +672,13 @@ $('bMute').onclick=()=>{SV.mute=AU.on;AU.mute(SV.mute);save();menuHTML()};
 $('bRetry').onclick=()=>{OV.lock=0;retry(0)};
 $('bMenu').onclick=toMenu;
 $('bRev').onclick=revive;
+$('bMore').onclick=()=>{const o=$('oMore'),h=o.classList.toggle('hide');$('bMore').textContent=h?'details':'hide details';$('bMore').setAttribute('aria-expanded',String(!h))};
 $('over').addEventListener('pointerdown',e=>{if(e.target===$('over')||e.target.closest('.oscore,.obest,.near,#oPost'))retry()});
 function hudStatic(){const P=wardP(S.ward);$('wname').textContent='Ward '+P.num+' · '+P.name;$('bbar').style.display=bestFor()>0?'':'none'}
 function hud(){
   const sc=Math.floor(S.score);
   if(sc!==S.hudScore){S.hudScore=sc;$('score').textContent=fmt(sc)}
-  $('mult').textContent='×'+S.mult+(S.combo?' · chain '+S.combo:'');
+  $('mult').textContent='×'+S.mult;
   $('cbar').firstChild.style.width=(S.combo?clamp(S.comboT/comboMax(),0,1)*100:0)+'%';
   $('wbar').firstChild.style.width=(mod(S.t,WL)/WL*100)+'%';
   {const ge=$('gate'),nx=S.ward+1;
