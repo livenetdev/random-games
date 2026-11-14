@@ -1,0 +1,17 @@
+{
+ "min": {
+  "mode": "min",
+  "totalSec": 376.7,
+  "totalMin": 6.28,
+  "sceneStarts": {
+   "intro": 0.1,
+   "act1": 40,
+   "act2": 183.2,
+   "act3": 325.4,
+   "ending:cold": 359.3
+  },
+  "ending": "cold",
+  "film": 13,
+  "errors": []
+ }
+}

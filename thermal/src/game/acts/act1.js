@@ -9,7 +9,7 @@ import { StillControls } from './controls.js';
 export const REEL = MANIFEST.filter((s) => s.reel).map((s) => s.id);
 export const CARDS = ['card_warm', 'card_flash', 'card_van', 'card_pin', 'card_moves', 'card_copy', 'card_cold'];
 export const PIN = '1103';
-export const READ_TIME = 5.5; // seconds to pull one file off the card (USB 1.1, 1997)
+export const READ_TIME = 7.5; // seconds to pull one file off the card (USB 1.1, 1997)
 const SLOT_NAMES = Object.fromEntries(BOARD_SLOTS.map((s) => [s.slot, s.label]));
 
 // ACT I — "The Card": Walt's trail-cam captures at the desk.
@@ -164,8 +164,9 @@ export class Act1 {
     this.pin += d; audio.sfx('tick');
     if (this.pin.length < 4) return;
     if (this.pin === PIN) {
-      this.st.pinOK = true; this.mode = 'reel'; audio.sfx('beep'); g.say('CAM 3 FOLDER UNLOCKED.', 2, COL.G);
-      this.step(1);
+      this.st.pinOK = true; this.mode = 'reel'; audio.sfx('beep'); g.say('PIN OK. OPENING CAM 3 FOLDER...', 6, COL.G);
+      this.busy = true; audio.sfx('read');
+      setTimeoutGame(g, 6, () => { this.busy = false; this.step(1); });
     } else { g.say('WRONG PIN.', 2, COL.R); this.pin = ''; audio.sfx('battery'); g.dread.add(0.01); }
   }
   pinClick(x, y) {

@@ -8,7 +8,7 @@ import { textWidth } from '../../render/font5x7.js';
 
 const DIRS = { ArrowUp: 'up', ArrowLeft: 'left', ArrowRight: 'right', ArrowDown: 'down', KeyW: 'up', KeyA: 'left', KeyD: 'right', KeyS: 'down' };
 const ARROW = { up: '↑', left: '←', right: '→', down: '↓' };
-export const WALK_TIME = 5.5;   // ~50 m of dark trail between places
+export const WALK_TIME = 7.5;   // ~50 m of dark trail between places
 export const FLASH_READY = 1.5; // the disposable's flash takes this long to recycle
 const CAMNAME = { cam1: 'CAM 1', cam2: 'CAM 2', cam3: 'CAM 3' };
 
@@ -25,8 +25,11 @@ export class Act2 {
     this.updateNear();
     if (!this.st.act2Intro) {
       this.st.act2Intro = true;
-      g.say('ARROWS: CHOOSE A WAY. HOLD ENTER (OR MOUSE) TO CHARGE THE FLASH, RELEASE TO GO.', 6, COL.C);
-      setTimeoutGame(g, 6.5, () => g.say('TAB: THERMAL MONITOR. M: WALT\'S MAP. THREE CAMERAS TO RESET.', 5, COL.C));
+      this.busy = true;
+      audio.sfx('creak', { gain: 0.5 }); g.caption('[the trailer door]');
+      setTimeoutGame(g, 2.5, () => g.say('NO MOON. I COULDN\'T SEE MY OWN HANDS.', 4));
+      setTimeoutGame(g, 7, () => { this.busy = false; g.say('ARROWS: CHOOSE A WAY. HOLD ENTER (OR MOUSE) TO CHARGE THE FLASH, RELEASE TO GO.', 6, COL.C); });
+      setTimeoutGame(g, 13.5, () => g.say('TAB: THERMAL MONITOR. M: WALT\'S MAP. THREE CAMERAS TO RESET.', 5, COL.C));
     }
     g.save();
   }
@@ -132,6 +135,7 @@ export class Act2 {
     if (to) {
       audio.sfx('walk', { surface: NODES[to].surface || 'leaves' });
       setTimeoutGame(this.g, 2.3, () => audio.sfx('walk', { surface: NODES[to].surface || 'leaves' }));
+      setTimeoutGame(this.g, 4.8, () => audio.sfx('walk', { surface: NODES[to].surface || 'leaves' }));
       if (this.itDist() <= 2 && g.rand() < 0.6) { audio.echoStep(NODES[to].surface || 'leaves', 2100); g.caption('[footsteps behind you]', 3); }
     }
     setTimeoutGame(g, walk, () => {
@@ -217,9 +221,12 @@ export class Act2 {
     const g = this.g, st = this.st;
     this.busy = true; this.mode = 'dark';
     audio.sfx('beep');
-    g.say(`RESETTING ${CAMNAME[c]}... IT SAVED ITS LAST BURST.`, 2.5);
-    for (let i = 1; i <= 3; i++) setTimeoutGame(g, 1.4 + (i - 1) * 1.0, () => { audio.sfx('trailclick'); g.viewer.show(`${c}_b${i}`, 'cut', { noSub: true }); });
-    setTimeoutGame(g, 1.4 + 3 * 1.0 + 1.6, () => {
+    g.say(`${CAMNAME[c]}: REBOOTING...`, 5);
+    setTimeoutGame(g, 2.5, () => audio.sfx('beep', { gain: 0.5 }));
+    setTimeoutGame(g, 5.0, () => { audio.sfx('beep'); g.say('IT SAVED ITS LAST BURST.', 2.5); });
+    const B = 6.5;
+    for (let i = 1; i <= 3; i++) setTimeoutGame(g, B + (i - 1) * 1.0, () => { audio.sfx('trailclick'); g.viewer.show(`${c}_b${i}`, 'cut', { noSub: true }); });
+    setTimeoutGame(g, B + 3 * 1.0 + 2.0, () => {
       g.viewer.blank();
       st.resets[c] = true;
       g.dread.add(0.1);

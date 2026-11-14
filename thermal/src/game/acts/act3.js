@@ -25,7 +25,7 @@ export class Act3 {
     this.busy = true;
     g.viewer.blank();
     g.say('THE VAN\'S HEADLIGHTS WERE ON.', 3);
-    setTimeoutGame(g, 3, () => { this.busy = false; this.look(); g.say('↑ WALK CLOSER · F FLASH · TAB MONITOR · SPACE BLINK · T THRESHOLD', 5, COL.C); });
+    setTimeoutGame(g, 5, () => { this.busy = false; this.look(); g.say('↑ WALK CLOSER · F FLASH · TAB MONITOR · SPACE BLINK · T THRESHOLD', 5, COL.C); });
   }
   dreadCtx() { return { itNear: 0.5 + this.pos * 0.15, deciding: POS[this.pos] === 'close' }; }
   look(type = 'dissolve') {
@@ -68,8 +68,9 @@ export class Act3 {
     this.busy = true;
     audio.sfx('walk', { surface: 'gravel' });
     g.viewer.blank();
-    setTimeoutGame(g, 1.8, () => audio.sfx('walk', { surface: 'gravel' }));
-    setTimeoutGame(g, 4.0, () => {
+    setTimeoutGame(g, 2.0, () => audio.sfx('walk', { surface: 'gravel' }));
+    setTimeoutGame(g, 4.2, () => audio.sfx('walk', { surface: 'gravel', gain: 0.7 }));
+    setTimeoutGame(g, 6.5, () => {
       this.pos++;
       this.busy = false;
       this.look();
@@ -79,15 +80,16 @@ export class Act3 {
         this.busy = true;
         setTimeoutGame(g, 2.5, () => { audio.sfx('creak', { gain: 0.6 }); g.caption('[the van door creaks]'); });
         setTimeoutGame(g, 6.0, () => g.say('ONE OF THEM IS WALT. HIS KEYS ARE ON HIM.', 4, COL.Y));
-        setTimeoutGame(g, 10.0, () => { this.busy = false; g.say('CLICK ONE OF THEM (OR PRESS 1 / 2).', 4, COL.Y); });
+        setTimeoutGame(g, 11.0, () => g.say('THE OTHER ONE IS WEARING HIS COAT.', 4, COL.Y));
+        setTimeoutGame(g, 16.0, () => { this.busy = false; g.say('CLICK ONE OF THEM (OR PRESS 1 / 2).', 4, COL.Y); });
       }
     });
   }
   camBurst() {
     const g = this.g;
     this.camSeen = true; this.busy = true;
-    setTimeoutGame(g, 1.2, () => { audio.sfx('trailclick'); g.say('CAM 3 CAUGHT ME.', 2.5); g.viewer.show(`a3_cam_${this.W}`, 'cut'); });
-    setTimeoutGame(g, 5.2, () => { this.busy = false; this.look('cut'); });
+    setTimeoutGame(g, 1.2, () => { audio.sfx('trailclick'); g.say('CAM 3 CAUGHT ME. IT STREAMS TO THE MONITOR NOW.', 4); g.viewer.show(`a3_cam_${this.W}`, 'cut'); });
+    setTimeoutGame(g, 8.2, () => { this.busy = false; this.look('cut'); });
   }
   flash() {
     const g = this.g, st = this.st;
