@@ -55,7 +55,6 @@ button:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
   font-family:var(--f-mono);font-weight:600;font-size:calc(var(--bs) * .075);transition:background .08s,color .08s,transform .1s}
 .tag{position:absolute;top:6%;right:9%;font-style:normal;font-family:var(--f-mono);font-size:max(9px,calc(var(--bs) * .022));font-weight:600;letter-spacing:.02em}
 .gold .face{box-shadow:inset 0 0 0 2px var(--gold),0 0 14px color-mix(in srgb,var(--gold) 35%,transparent)} .gold .tag{color:var(--gold)}
-.clock .face{box-shadow:inset 0 0 0 2px var(--time),0 0 14px color-mix(in srgb,var(--time) 35%,transparent)} .clock .tag{color:var(--time)}
 .sel .face{background:var(--pc);color:var(--bg);transform:scale(1.06)} .sel .tag{color:var(--bg)}
 .stage.over .sel .face{background:var(--bad)}
 .stage.hit .sel .face{box-shadow:0 0 0 2px var(--ink),0 0 22px var(--pc)}
@@ -168,7 +167,7 @@ button:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
   let rng = mulberry32((Math.random() * 4294967296) >>> 0);
   const W = [0, 14, 14, 13, 12, 11, 10, 9, 9, 8], WT = W.reduce((a, b) => a + b, 0);
   function rollDigit() { let x = rng() * WT; for (let d = 1; d <= 9; d++) { x -= W[d]; if (x < 0) return d; } return 9; }
-  function rollKind() { const x = rng(); return x < 0.05 ? 'gold' : x < 0.13 ? 'clock' : ''; }
+  function rollKind() { const x = rng(); return x < 0.05 ? 'gold' : ''; }
 
   /* ---------- audio ---------- */
   let actx = null, master = null, muted = store.get('muted', false);
@@ -211,7 +210,7 @@ button:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
 
   /* ---------- state ---------- */
   let grid = [], T = 10, level = 1, clears = 0, score = 0, shownScore = 0, time = START_T, combo = 0, bestCombo = 0,
-      lastClearAt = -99, gameTime = 0, maxChain = 0, cells = 0, idle = 0, hint = null, hintDone = false,
+      lastClearAt = -99, gameTime = 0, maxChain = 0, streak = 0, bestStreak = 0, earned = 0, cells = 0, idle = 0, hint = null, hintDone = false,
       path = [], dragging = false, pointerId = null, lastPt = null, clutch = false, lastTick = 99,
       state = 'menu', mode = 'endless', nextId = 0;
 
@@ -223,7 +222,7 @@ button:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
   function place(t, row = t.r) { t.el.style.setProperty('--c', t.c); t.el.style.setProperty('--r', row); }
   function paint(t) {
     t.el.className = 'tile' + (t.k ? ' ' + t.k : '');
-    t.el.innerHTML = '<div class="face"><span>' + t.v + '</span>' + (t.k === 'gold' ? '<i class="tag">×2</i>' : t.k === 'clock' ? '<i class="tag">+5s</i>' : '') + '</div>';
+    t.el.innerHTML = '<div class="face"><span>' + t.v + '</span>' + (t.k === 'gold' ? '<i class="tag">×2</i>' : '') + '</div>';
   }
   function makeTile(r, c, fromRow) {
     const t = { id: nextId++, v: rollDigit(), k: rollKind(), r, c, el: document.createElement('div') };
@@ -297,7 +296,7 @@ button:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
     trail.setAttribute('points', path.map(t => (t.c + 0.5) + ',' + (t.r + 0.5)).join(' '));
     const live = $('live');
     live.className = hit ? 'hit' : over ? 'over' : '';
-    live.textContent = path.length ? 'Σ ' + s + ' · ' + path.length + (path.length === 1 ? ' tile' : ' tiles') : 'drag to chain';
+    live.textContent = path.length ? 'Σ ' + s + ' · ' + path.length + (path.length === 1 ? ' tile' : ' tiles') : (streak > 1 ? 'streak ' + streak + ' · ' : '') + 'drag to chain';
   }
   function addCell(r, c) {
     if (r < 0 || c < 0 || r >= N || c >= N) return;
@@ -356,7 +355,7 @@ button:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
     clutch = false;
   }
   function miss() {
-    combo = 0; lastClearAt = -99;
+    combo = 0; lastClearAt = -99; streak = 0;
     board.classList.remove('shake'); void board.offsetWidth; board.classList.add('shake');
     sfx.miss(); buzz(30);
   }
@@ -381,9 +380,11 @@ button:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
     const L = path.length, wasClutch = time <= 0;
     combo = (gameTime - lastClearAt <= COMBO_WIN) ? combo + 1 : 1;
     lastClearAt = gameTime; bestCombo = Math.max(bestCombo, combo);
-    const golds = path.filter(t => t.k === 'gold').length, clocks = path.filter(t => t.k === 'clock').length;
+    const golds = path.filter(t => t.k === 'gold').length;
     const pts = Math.round(T * L * L * 0.5 * comboMult(combo) * Math.pow(2, golds));
-    const gain = L + Math.max(0, L - 3) + 5 * clocks + Math.min(3, 0.5 * (combo - 1));
+    streak++; bestStreak = Math.max(bestStreak, streak);
+    const gain = L + Math.max(0, L - 3) + Math.min(3, 0.5 * (combo - 1)) + Math.min(2, 0.25 * (streak - 1));
+    earned += gain;
     time = Math.min(MAX_T, time + gain);
     score += pts; clears++; cells += L; maxChain = Math.max(maxChain, L);
     const end = path[L - 1];
@@ -468,7 +469,7 @@ button:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
     mode = m;
     rng = mulberry32(m === 'daily' ? (Math.imul(dayKey(), 2654435761) >>> 0) : ((Math.random() * 4294967296) >>> 0));
     T = 10; level = 1; clears = 0; score = 0; shownScore = 0; $('score').textContent = '0';
-    time = START_T; combo = 0; bestCombo = 0; lastClearAt = -99; gameTime = 0; maxChain = 0; cells = 0;
+    time = START_T; combo = 0; bestCombo = 0; lastClearAt = -99; gameTime = 0; maxChain = 0; cells = 0; streak = 0; bestStreak = 0; earned = 0;
     idle = 0; hint = null; hintDone = false; path = []; dragging = false; clutch = false; lastTick = 99;
     pops.innerHTML = '';
     buildBoard(true);
@@ -500,6 +501,7 @@ button:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
         row('Clears', clears) + row('Longest chain', maxChain) +
         row('Level', level) + row('Best combo', '×' + comboMult(bestCombo).toFixed(2).replace(/\.?0+$/, '')) +
         row('Tiles', cells) + row('Pts / clear', fmt(ppc)) +
+        row('Best streak', bestStreak) + row('Time earned', Math.round(earned) + ' s') +
       '</dl>' +
       '<div class="btns"><button class="btn main" id="again" type="button">Again</button><button class="btn" id="other" type="button">' + (mode === 'daily' ? 'Endless' : 'Daily seed') + '</button></div>' +
       '<p class="meta">Space or Enter: again · R: restart mid-run</p>';
@@ -518,10 +520,10 @@ button:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
       '<p class="rule">Drag through touching tiles, diagonals included, until they add up to the target. Let go to clear them.</p>' +
       '<dl class="facts">' +
         '<dt>Score</dt><dd>target × chain² ÷ 2. Long chains pay most.</dd>' +
-        '<dt>Time</dt><dd>+1 s per tile, +1 s more per tile past 3. +10 s each level. Drains faster each level.</dd>' +
+        '<dt>Time</dt><dd>Earned only by play. +1 s per tile, +1 s more per tile past 3, +10 s each level. Drains faster each level.</dd>' +
         '<dt>Combo</dt><dd>Clear again within 3.5 s: +0.25× points (max ×4) and +0.5 s (max +3 s).</dd>' +
         '<dt class="g">×2</dt><dd>Gold tile doubles that clear.</dd>' +
-        '<dt class="t">+5s</dt><dd>Clock tile adds five seconds.</dd>' +
+        '<dt>Streak</dt><dd>Clears in a row without a wrong release: +0.25 s each, up to +2 s.</dd>' +
         '<dt>0.0 s</dt><dd>Still dragging at zero? Land the sum to survive.</dd>' +
       '</dl>' +
       '<div class="btns"><button class="btn main" id="play" type="button">Play</button><button class="btn" id="daily" type="button">Daily seed</button></div>' +
