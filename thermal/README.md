@@ -83,7 +83,21 @@ Because the heat buffer is stored, the threshold tool, palette cycling (hot band
 - Hard mode removes hover hints.
 - Volume and mute.
 
-**Pacing.** The 1997 card reader takes 5.5 s to pull each file off the card. The flash needs 1.5 s to recycle. Each walk between places takes 5.5 s and the afterimage burns for 1.5 s. The shortest route through Act II is 12 moves, and all three cameras must be reset. `npm run speedrun` measures this: see `docs/speedrun.json`.
+**Pacing.**
+- The 1997 card reader needs 7.5 s to pull each file off the card, and opening the PIN-locked folder takes another 6 s.
+- The flash needs 1.5 s to recycle. Each walk between places takes 7.5 s, and the afterimage then burns for 1.5 s.
+- Each camera needs about 6.5 s to reboot.
+- The shortest route through Act II is 12 moves, and all three cameras must be reset.
+- Act III holds about 16 s at the van before you can choose.
+
+`npm run speedrun` plays the whole game with an autopilot on the game clock. Measured on the production build, played offline from `file://` (`DIST=1 npm run speedrun`, `docs/speedrun-dist.json`):
+
+| run | total | intro | Act I | Act II | Act III | ending |
+|---|---|---|---|---|---|---|
+| minimum possible (`min`) | **8.1 min** | 0:40 | 3:07 | 3:10 | 0:53 | Cold |
+| realistic first playthrough (`human`) | **17.1 min** | 0:40 | 8:42 | 5:33 | 1:55 | Warm |
+
+Both runs finished with 0 console errors. Total JS is 664 kB (178 kB gzipped).
 
 ## Architecture
 

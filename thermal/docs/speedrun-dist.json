@@ -1,0 +1,32 @@
+{
+ "min": {
+  "mode": "min",
+  "totalSec": 486.8,
+  "totalMin": 8.11,
+  "sceneStarts": {
+   "intro": 0.1,
+   "act1": 39.9,
+   "act2": 227,
+   "act3": 416.9,
+   "ending:cold": 469.4
+  },
+  "ending": "cold",
+  "film": 13,
+  "errors": []
+ },
+ "human": {
+  "mode": "human",
+  "totalSec": 1023.7,
+  "totalMin": 17.06,
+  "sceneStarts": {
+   "intro": 0.1,
+   "act1": 40,
+   "act2": 561.9,
+   "act3": 894.8,
+   "ending:warm": 1010
+  },
+  "ending": "warm",
+  "film": 6,
+  "errors": []
+ }
+}
