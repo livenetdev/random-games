@@ -51,10 +51,11 @@ add({ id: 'a1_09b', act: 1, scene: 'meadow', variant: 'open', ...cam(1), params:
 add({ id: 'a1_12b', act: 1, scene: 'meadow', variant: 'open', ...cam(1), params: { stage: 0.24 }, variantOf: 'a1_12', hasIt: true });
 add({ id: 'a1_20b', act: 1, scene: 'trailer', variant: 'window', ...cam(2), params: { stage: 0.4, door: true }, variantOf: 'a1_20', hasIt: true });
 add({ id: 'a1_23b', act: 1, scene: 'drive', variant: 'tonight2', ...cam(3), params: { stage: 0.45 }, variantOf: 'a1_23', hasIt: true });
+for (const s of S) if (s.variantOf) { const b = S.find((x) => x.id === s.variantOf); Object.assign(s, { time: b.time, date: b.date, temp: b.temp }); }
 // live feed + first earned jump-scare
 add({ id: 'a1_live', act: 1, scene: 'trailer', variant: 'live', cam: 'CAM 2', lut: 'night', style: 'monitor', time: 'now', date: '11/14/1997', params: { stage: 0.5 }, hasIt: true });
 add({ id: 'a1_scare', act: 1, scene: 'desk', variant: 'behind', style: 'none', params: { stage: 0.5 }, hasIt: true });
-add({ id: 'a1_face', act: 1, scene: 'close', variant: 'face', style: 'none', params: { stage: 0.5 }, hasIt: true, fx: { blur: 0.9 } });
+add({ id: 'a1_face', act: 1, scene: 'close', variant: 'face', style: 'none', params: { stage: 0.45 }, hasIt: true });
 
 // ---------- index cards + board (2D, scanned) ----------
 const CARDS = [
@@ -112,12 +113,12 @@ add({ id: 'e_c4', act: 4, scene: 'road', variant: 'ahead', style: 'none', params
 add({ id: 'e_c5', act: 4, scene: 'mirror', variant: 'blob', style: 'none' });
 for (const w of ['driver', 'door']) {
   const W = w === 'driver' ? 'A' : 'B';
-  add({ id: `e_w1_${W}`, act: 4, scene: 'close', variant: 'door', style: 'none', params: { stage: 0.95 }, hasIt: true });
+  add({ id: `e_w1_${W}`, act: 4, scene: 'close', variant: 'door', style: 'none', params: { stage: 0.7 }, hasIt: true });
   add({ id: `e_w7_${W}`, act: 4, scene: 'van', variant: 'dana', ...cam(3), time: 'now', date: '11/14/1997', temp: '27°F', params: { walt: w, stage: 0.95, corpseT: 0.62 }, hasIt: true, micro: ['breathe'] });
 }
-add({ id: 'e_w2', act: 4, scene: 'close', variant: 'hand', style: 'none', params: { stage: 0.95 }, hasIt: true });
+add({ id: 'e_w2', act: 4, scene: 'close', variant: 'hand', style: 'none', params: { stage: 0.75 }, hasIt: true });
 add({ id: 'e_w3', act: 4, scene: 'close', variant: 'wake', style: 'none' });
-add({ id: 'e_w4', act: 4, scene: 'close', variant: 'face', style: 'none', params: { stage: 1 }, hasIt: true, clash: true });
+add({ id: 'e_w4', act: 4, scene: 'close', variant: 'face', style: 'none', params: { stage: 0.8 }, hasIt: true, clash: true });
 add({ id: 'e_w5', act: 4, scene: 'close', variant: 'seat', style: 'none' });
 add({ id: 'e_w6', act: 4, scene: 'van', variant: 'ref', style: 'none', params: { stage: 1, walt: 'driver' }, clash: true, hasIt: true });
 add({ id: 'e_x2', act: 4, scene: 'meadow', variant: 'dawn', ...cam(1), time: '06:12:40', date: '11/15/1997', temp: '26°F', params: { stage: 1, groundT: 0.2 }, hasIt: true });
@@ -126,7 +127,7 @@ add({ id: 'e_x2', act: 4, scene: 'meadow', variant: 'dawn', ...cam(1), time: '06
 add({ id: 'sub_behind', act: 9, scene: 'close', variant: 'behind', style: 'none', params: { stage: 0.6 }, hasIt: true });
 add({ id: 'sub_hand', act: 9, scene: 'close', variant: 'hand', style: 'none', params: { stage: 0.6 }, hasIt: true, clash: true });
 add({ id: 'sub_seat', act: 9, scene: 'close', variant: 'seat', style: 'none', clash: true });
-add({ id: 'sub_face', act: 9, scene: 'close', variant: 'face', style: 'none', params: { stage: 0.7 }, hasIt: true, clash: true });
+add({ id: 'sub_face', act: 9, scene: 'close', variant: 'face', style: 'none', params: { stage: 0.6 }, hasIt: true, clash: true });
 
 // ---------- title ----------
 add({ id: 'title', act: 0, scene: 'van', variant: 'ref', ...cam(3), time: '03:14:07', date: '11/03/1997', temp: '31°F', params: { stage: 0.1, corpseT: 0.7, walt: 'driver' }, micro: ['breathe'] });

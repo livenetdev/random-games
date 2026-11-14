@@ -115,6 +115,8 @@ const BEATS = [
   { still: null, text: 'FORTY ACRES OF TIMBER. A TRAILER. A SHED. A CHEVY VAN THAT HADN\'T MOVED IN YEARS.' },
   { still: 'a1_22', text: 'I GOT THERE AT TEN TO TEN.' },
   { still: 'i_desk', text: 'HIS CARD READER WAS STILL PLUGGED IN. HIS NOTES WERE EVERYWHERE.' },
+  { still: 'i_dark', text: 'THE TRAILER SMELLED LIKE HIM. COLD COFFEE AND TWO-STROKE OIL.' },
+  { still: null, text: 'THE COUNTY SAID HE WALKED OFF INTO THE TIMBER. THEY NEVER LOOKED IN THE VAN.' },
   { still: null, text: 'I SHOULD HAVE LEFT THEN.' },
 ];
 export class Intro {
@@ -128,10 +130,11 @@ export class Intro {
     if (b.still) this.g.viewer.show(b.still, 'dissolve', { noSub: true, dur: 0.6 }); else this.g.viewer.blank();
     if (b.still === 'a1_22') audio.sfx('trailclick');
   }
-  typedDone() { const b = BEATS[this.i]; return (this.g.time - this.t0) * 24 > b.text.length + 4; }
-  update() { if (this.typedDone() && this.g.time - this.t0 > BEATS[this.i].text.length / 24 + 3.2) this.next(); }
-  key(code) { if ((code === 'Enter' || code === 'Space') && this.typedDone() && this.g.time - this.t0 > 1.6) this.next(); }
-  pointerUp() { if (this.typedDone() && this.g.time - this.t0 > 1.6) this.next(); }
+  typedDone() { const b = BEATS[this.i]; return (this.g.time - this.t0) * 18 > b.text.length + 4; }
+  update() { if (this.typedDone() && this.g.time - this.t0 > BEATS[this.i].text.length / 18 + 4.5) this.next(); }
+  key(code) { if ((code === 'Enter' || code === 'Space') && this.canSkip()) this.next(); }
+  pointerUp() { if (this.canSkip()) this.next(); }
+  canSkip() { return this.typedDone() && this.g.time - this.t0 > BEATS[this.i].text.length / 18 + 2.0; }
   draw(buf, t) {
     this.g.viewer.draw(buf, t);
     const b = BEATS[this.i]; if (!b) return;
@@ -139,6 +142,6 @@ export class Intro {
     const y = b.still ? this.g.display.h - 40 : 90;
     const lines = ui.wrap(b.text, 46);
     ui.rect(0, y - 4, this.g.display.w, lines.length * 11 + 6, b.still ? COL.k : COL.k);
-    ui.typed(b.text, t - this.t0, 'center', y, 46, 24, COL.W);
+    ui.typed(b.text, t - this.t0, 'center', y, 46, 18, COL.W);
   }
 }

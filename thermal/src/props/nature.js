@@ -2,7 +2,7 @@ import { Group } from 'three';
 import { mesh, cone, cyl, ico, box, sphere, heat, jitter } from './util.js';
 
 // Conifer: trunk + noisy cone stack. t ~ cold.
-export function fir(rng, { h = 9, t = 0.2, r = null } = {}) {
+export function fir(rng, { h = 9, t = 0.26, r = null } = {}) {
   const g = new Group();
   const rr = r ?? h * 0.22;
   const trunk = heat(t + 0.08, { noise: 0.04, nscale: 2, alb: 0.4, rim: -0.02, grad: -0.02, gradBase: 1 });

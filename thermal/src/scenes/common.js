@@ -68,7 +68,7 @@ export function itTemp(stage = 0) {
 import { figure } from '../props/figure.js';
 // "It": a figure that only registers as heat. Invisible to the flash pass.
 export function itFigure(stage = 0.3, pose = 'stand', o = {}) {
-  const f = figure({ temp: o.temp ?? itTemp(stage), pose, tagName: o.tag ?? 'it', rim: -0.22, headAdd: 0.05, seed: o.seed ?? 13, lumpy: o.lumpy ?? 0.03 });
+  const f = figure({ temp: o.temp ?? itTemp(stage), pose, tagName: o.tag ?? 'it', rim: -0.22, headAdd: 0.05, seed: o.seed ?? 13, lumpy: o.lumpy ?? 0.04 });
   f.userData.noFlash = true;
   return f;
 }

@@ -535,7 +535,10 @@
    "stage": 0.05
   },
   "variantOf": "a1_01",
-  "hasIt": true
+  "hasIt": true,
+  "time": "02:11:40",
+  "date": "10/19/1997",
+  "temp": "38°F"
  },
  {
   "seed": 2025,
@@ -551,7 +554,10 @@
    "stage": 0.15
   },
   "variantOf": "a1_08",
-  "hasIt": true
+  "hasIt": true,
+  "time": "22:15:31",
+  "date": "10/26/1997",
+  "temp": "39°F"
  },
  {
   "seed": 2026,
@@ -567,7 +573,10 @@
    "stage": 0.18
   },
   "variantOf": "a1_09",
-  "hasIt": true
+  "hasIt": true,
+  "time": "03:12:44",
+  "date": "10/27/1997",
+  "temp": "33°F"
  },
  {
   "seed": 2027,
@@ -583,7 +592,10 @@
    "stage": 0.24
   },
   "variantOf": "a1_12",
-  "hasIt": true
+  "hasIt": true,
+  "time": "05:20:11",
+  "date": "10/30/1997",
+  "temp": "31°F"
  },
  {
   "seed": 2028,
@@ -600,7 +612,10 @@
    "door": true
   },
   "variantOf": "a1_20",
-  "hasIt": true
+  "hasIt": true,
+  "time": "06:30:44",
+  "date": "11/05/1997",
+  "temp": "35°F"
  },
  {
   "seed": 2029,
@@ -616,7 +631,10 @@
    "stage": 0.45
   },
   "variantOf": "a1_23",
-  "hasIt": true
+  "hasIt": true,
+  "time": "22:31:08",
+  "date": "11/14/1997",
+  "temp": "33°F"
  },
  {
   "seed": 2030,
@@ -659,12 +677,9 @@
   "scene": "close",
   "variant": "face",
   "params": {
-   "stage": 0.5
+   "stage": 0.45
   },
-  "hasIt": true,
-  "fx": {
-   "blur": 0.9
-  }
+  "hasIt": true
  },
  {
   "seed": 2033,
@@ -3034,7 +3049,7 @@
   "scene": "close",
   "variant": "door",
   "params": {
-   "stage": 0.95
+   "stage": 0.7
   },
   "hasIt": true
  },
@@ -3071,7 +3086,7 @@
   "scene": "close",
   "variant": "door",
   "params": {
-   "stage": 0.95
+   "stage": 0.7
   },
   "hasIt": true
  },
@@ -3108,7 +3123,7 @@
   "scene": "close",
   "variant": "hand",
   "params": {
-   "stage": 0.95
+   "stage": 0.75
   },
   "hasIt": true
  },
@@ -3132,7 +3147,7 @@
   "scene": "close",
   "variant": "face",
   "params": {
-   "stage": 1
+   "stage": 0.8
   },
   "hasIt": true,
   "clash": true
@@ -3232,7 +3247,7 @@
   "scene": "close",
   "variant": "face",
   "params": {
-   "stage": 0.7
+   "stage": 0.6
   },
   "hasIt": true,
   "clash": true

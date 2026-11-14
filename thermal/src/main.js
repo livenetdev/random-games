@@ -6,6 +6,7 @@ import { Act3 } from './game/acts/act3.js';
 import { Ending } from './game/acts/endings.js';
 import { Developing } from './game/acts/develop.js';
 import { installDebug } from './debug/debug.js';
+import { installAutopilot } from './debug/autopilot.js';
 
 // State machine: Title -> Intro -> Act1 -> Act2 -> Act3 -> Ending
 const game = new Game();
@@ -25,6 +26,7 @@ game.resume = () => {
 };
 window.__game = game;
 if (game.debug) installDebug(game);
+if (game.q.get('autopilot')) installAutopilot(game, game.q.get('autopilot'));
 const skipWarn = game.q.get('skipwarn') === '1';
 game.goto(skipWarn ? new Loader(game) : new Warning(game));
 game.start();

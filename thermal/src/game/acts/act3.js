@@ -68,12 +68,19 @@ export class Act3 {
     this.busy = true;
     audio.sfx('walk', { surface: 'gravel' });
     g.viewer.blank();
-    setTimeoutGame(g, 1.8, () => {
+    setTimeoutGame(g, 1.8, () => audio.sfx('walk', { surface: 'gravel' }));
+    setTimeoutGame(g, 4.0, () => {
       this.pos++;
       this.busy = false;
       this.look();
       if (POS[this.pos] === 'mid' && !this.camSeen) this.camBurst();
-      if (POS[this.pos] === 'close') { audio.sfx('creak', { gain: 0.6 }); g.caption('[the van door creaks]'); g.say('ONE OF THEM IS WALT. HIS KEYS ARE ON HIM. CLICK ONE (OR 1 / 2).', 5, COL.Y); }
+      if (POS[this.pos] === 'close') {
+        // nobody moves. let the player look first.
+        this.busy = true;
+        setTimeoutGame(g, 2.5, () => { audio.sfx('creak', { gain: 0.6 }); g.caption('[the van door creaks]'); });
+        setTimeoutGame(g, 6.0, () => g.say('ONE OF THEM IS WALT. HIS KEYS ARE ON HIM.', 4, COL.Y));
+        setTimeoutGame(g, 10.0, () => { this.busy = false; g.say('CLICK ONE OF THEM (OR PRESS 1 / 2).', 4, COL.Y); });
+      }
     });
   }
   camBurst() {

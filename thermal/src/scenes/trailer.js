@@ -9,8 +9,8 @@ import { pole } from '../props/structures.js';
 // CAM 2: Walt's single-wide from the yard. Windows are real openings so heat inside reads through.
 export function build(rng, variant, P = {}) {
   const scene = makeScene();
-  scene.add(ground(rng, { t: 0.17, noise: 0.04 }));
-  treeBand(rng, scene, { x0: -40, x1: 40, z0: -40, z1: -8, n: 60, t: 0.215, hMin: 10, hMax: 18 });
+  scene.add(ground(rng, { t: 0.165, noise: 0.025 }));
+  treeBand(rng, scene, { x0: -40, x1: 40, z0: -40, z1: -8, n: 60, t: 0.26, hMin: 10, hMax: 18 });
   const lit = variant === 'live' || P.lit;
   const inside = P.inside ?? (lit ? 0.4 : 0.24);
   const wall = heat(0.27, { noise: 0.04, nscale: 1, grad: -0.03, gradBase: 1.5, alb: 0.65 });
@@ -21,7 +21,9 @@ export function build(rng, variant, P = {}) {
   const room = heat(inside, { noise: 0.05, nscale: 1.5, alb: 0.2 });
   const T = new Group();
   // body behind the front face
-  T.add(mesh(box(14, 2.4, 4.0), wall, 0, 1.9, -0.15));
+  T.add(mesh(box(14, 2.4, 0.4), wall, 0, 1.9, -1.95));
+  T.add(mesh(box(0.2, 2.4, 4.0), wall, -6.95, 1.9, -0.05), mesh(box(0.2, 2.4, 4.0), wall, 6.95, 1.9, -0.05));
+  T.add(mesh(box(14, 0.1, 4.0), skirt, 0, 0.74, -0.05));
   T.add(mesh(box(14.1, 0.7, 4.0), skirt, 0, 0.35, -0.1));
   T.add(mesh(box(14.2, 0.18, 4.4), roof, 0, 3.15, 0));
   // hollow out a room behind the middle window + door
@@ -75,7 +77,7 @@ export function build(rng, variant, P = {}) {
       break;
     }
     case 'window': {
-      const f = itFigure(stage, 'stand'); f.position.set(-2.2, 0.8, 0.9); scene.add(f);
+      const f = itFigure(stage, 'stand'); f.position.set(-2.3, 0.75, 1.55); scene.add(f);
       break;
     }
     case 'live': {

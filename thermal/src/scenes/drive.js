@@ -10,11 +10,11 @@ export function build(rng, variant, P = {}) {
   const scene = makeScene();
   const vanOn = ['two', 'tonight2', 'mirror'].includes(variant);
   const vanWarm = vanOn ? 0.7 : variant === 'sleep' ? 0.0 : 0;
-  scene.add(ground(rng, { t: 0.17, noise: 0.04 }));
+  scene.add(ground(rng, { t: 0.165, noise: 0.025 }));
   scene.add(strip(rng, -2, 18, 1, -30, { width: 4, t: 0.085, pool: vanOn ? [3.2, 0, 1.8] : null, poolAdd: 0.25, poolR: 3 }));
-  treeBand(rng, scene, { x0: -40, x1: 40, z0: -50, z1: -14, n: 70, t: 0.215, hMin: 10, hMax: 19 });
-  treeBand(rng, scene, { x0: 9, x1: 30, z0: -14, z1: 8, n: 14, t: 0.215 });
-  treeBand(rng, scene, { x0: -30, x1: -9, z0: -14, z1: 8, n: 14, t: 0.215 });
+  treeBand(rng, scene, { x0: -40, x1: 40, z0: -50, z1: -14, n: 70, t: 0.26, hMin: 10, hMax: 19 });
+  treeBand(rng, scene, { x0: 9, x1: 30, z0: -14, z1: 8, n: 14, t: 0.26 });
+  treeBand(rng, scene, { x0: -30, x1: -9, z0: -14, z1: 8, n: 14, t: 0.26 });
   bushes(rng, scene, { x0: -9, x1: 9, z0: -12, z1: -6, n: 4, t: 0.22, avoid: (x) => Math.abs(x) < 3 });
   const v = van({ lights: vanOn ? 1 : 0, engine: vanWarm, passengerDoor: ['sleep', 'two', 'walk3', 'mirror'].includes(variant) ? 0.85 : 0, cold: vanOn ? 0 : 0.06 });
   v.position.set(4.2, 0, -4.5); v.rotation.y = -0.55; scene.add(v);
@@ -62,6 +62,6 @@ export function build(rng, variant, P = {}) {
     case 'reset3': { const f = itFigure(stage, 'camera'); f.position.set(-0.6, 0, 4.0); f.rotation.y = Math.PI * 0.85; scene.add(f); break; }
     default: break;
   }
-  const camera = makeCam([-2.5, 1.5, 11], [1.2, 1.0, -3.5], P.fov ?? 50);
+  const camera = makeCam([-2.2, 1.5, 6.5], [1.6, 1.0, -3.6], P.fov ?? 52);
   return { scene, camera, fog: 0.028, ambient: 0.0, fx: { bleedTh: 0.8, bleed: 0.6 } };
 }

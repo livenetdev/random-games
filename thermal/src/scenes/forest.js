@@ -10,7 +10,7 @@ import { pickup } from '../props/van.js';
 export function build(rng, variant, P = {}) {
   const scene = makeScene();
   const surface = P.surface || 'leaves';
-  scene.add(ground(rng, { t: P.groundT ?? 0.17, noise: 0.045, undulate: P.ridge ? 1.2 : 0.35 }));
+  scene.add(ground(rng, { t: P.groundT ?? 0.165, noise: 0.025, undulate: P.ridge ? 1.2 : 0.35 }));
   const path = P.path || 'straight';
   const pw = P.pathW ?? 1.6, pt = surface === 'gravel' ? 0.27 : 0.235;
   const pathXs = [];
@@ -22,11 +22,11 @@ export function build(rng, variant, P = {}) {
   const onPath = (x, z) => pathXs.some((f) => Math.abs(x - f(z)) < (P.open ? 6 : 2.6));
   const dens = P.density ?? 1;
   if (!P.open) {
-    treeBand(rng, scene, { x0: -30, x1: 30, z0: -45, z1: 2, n: Math.round(70 * dens), t: 0.215, hMin: 8, hMax: 17, avoid: onPath, kind: P.kind || 'fir' });
+    treeBand(rng, scene, { x0: -30, x1: 30, z0: -45, z1: 2, n: Math.round(70 * dens), t: 0.26, hMin: 8, hMax: 17, avoid: onPath, kind: P.kind || 'fir' });
   } else {
-    treeBand(rng, scene, { x0: -45, x1: 45, z0: -50, z1: -24, n: Math.round(60 * dens), t: 0.215, hMin: 9, hMax: 18 });
-    treeBand(rng, scene, { x0: -30, x1: -12, z0: -24, z1: 2, n: 10, t: 0.215 });
-    treeBand(rng, scene, { x0: 12, x1: 30, z0: -24, z1: 2, n: 10, t: 0.215 });
+    treeBand(rng, scene, { x0: -45, x1: 45, z0: -50, z1: -24, n: Math.round(60 * dens), t: 0.26, hMin: 9, hMax: 18 });
+    treeBand(rng, scene, { x0: -30, x1: -12, z0: -24, z1: 2, n: 10, t: 0.26 });
+    treeBand(rng, scene, { x0: 12, x1: 30, z0: -24, z1: 2, n: 10, t: 0.26 });
   }
   bushes(rng, scene, { x0: -10, x1: 10, z0: -18, z1: -2, n: Math.round(6 * dens), t: 0.22, avoid: onPath });
   if (P.creek) {

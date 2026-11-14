@@ -6,9 +6,9 @@ import { lantern } from '../props/small.js';
 // CAM 1: meadow below the treeline. Camera strapped to a fir at the meadow edge.
 export function build(rng, variant, P = {}) {
   const scene = makeScene();
-  scene.add(ground(rng, { t: P.groundT ?? 0.17, noise: 0.04, undulate: 0.35 }));
+  scene.add(ground(rng, { t: P.groundT ?? 0.165, noise: 0.025, undulate: 0.35 }));
   // treeline across the back third
-  treeBand(rng, scene, { x0: -45, x1: 45, z0: -46, z1: -22, n: 90, t: 0.215, hMin: 10, hMax: 20 });
+  treeBand(rng, scene, { x0: -45, x1: 45, z0: -46, z1: -22, n: 90, t: 0.26, hMin: 10, hMax: 20 });
   // near firs framing left/right
   const warmFir = fir(rng.fork('wf'), { h: 11, t: variant === 'hidden' || P.warmFir ? 0.27 : 0.15 });
   warmFir.position.set(-7.5, 0, -13); scene.add(warmFir);

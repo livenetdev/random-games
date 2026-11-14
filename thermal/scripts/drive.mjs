@@ -4,8 +4,12 @@ const require = createRequire(import.meta.url);
 const { chromium } = require('playwright');
 const url = process.env.URL || 'http://localhost:5173/?skipwarn=1';
 const outDir = process.env.OUT || '.';
-const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--autoplay-policy=no-user-gesture-required'] });
-const ctx = await browser.newContext({ viewport: { width: 960, height: 600 } });
+const args = ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--autoplay-policy=no-user-gesture-required'];
+// a persistent profile keeps the IndexedDB still cache between runs
+const browser = process.env.PROFILE
+  ? await chromium.launchPersistentContext(process.env.PROFILE, { args, viewport: { width: 960, height: 600 } })
+  : await chromium.launch({ args });
+const ctx = process.env.PROFILE ? browser : await browser.newContext({ viewport: { width: 960, height: 600 } });
 const page = await ctx.newPage();
 const errors = [];
 page.on('console', (m) => { if ((m.type() === 'error' || m.type() === 'warning') && !m.text().includes('GPU stall')) { errors.push(m.text()); console.log('[console]', m.type(), m.text()); } });

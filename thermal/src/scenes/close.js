@@ -6,13 +6,13 @@ import { mesh, box, heat } from '../props/util.js';
 // Close-ups for subliminal inserts and the two earned jump-scares. Never a face.
 export function build(rng, variant, P = {}) {
   const scene = makeScene();
-  scene.add(ground(rng, { t: 0.17 }));
-  treeBand(rng, scene, { x0: -30, x1: 30, z0: -40, z1: -6, n: 50, t: 0.215 });
+  scene.add(ground(rng, { t: 0.165, noise: 0.025 }));
+  treeBand(rng, scene, { x0: -30, x1: 30, z0: -40, z1: -6, n: 50, t: 0.26 });
   const stage = P.stage ?? 0.6;
   let camera = makeCam([0, 1.6, 1.0], [0, 1.6, -5], 55);
   switch (variant) {
     case 'face': {
-      const f = itFigure(stage, 'stand'); f.position.set(0.05, -0.05, -0.55); scene.add(f);
+      const f = itFigure(stage, 'standSlouch', { lumpy: 0.07 }); f.position.set(0.05, -0.05, -0.55); scene.add(f);
       break;
     }
     case 'hand': {
@@ -47,5 +47,5 @@ export function build(rng, variant, P = {}) {
     }
     default: break;
   }
-  return { scene, camera, fog: 0.03, ambient: 0.0 };
+  return { scene, camera, fog: 0.03, ambient: 0.0, fx: { blur: 1.7, sharp: 0.0, grain: 0.08, block: 0.035, bleed: 0.5, bleedTh: 0.7 } };
 }

@@ -255,6 +255,7 @@ export class StillRenderer {
     sharedUniforms.uFog.value = built.fog ?? 0.035;
     sharedUniforms.uAmb.value = built.ambient ?? 0.0;
     sharedUniforms.uFlashFall.value = built.flashFall ?? 0.02;
+    sharedUniforms.uFlashGain.value = built.flashGain ?? 4.0;
     this.renderer.setRenderTarget(this.rtScene);
     this.renderer.setClearColor(0x000000, 1);
     this.renderer.clear(true, true, true);

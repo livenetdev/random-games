@@ -9,6 +9,7 @@ import { StillControls } from './controls.js';
 export const REEL = MANIFEST.filter((s) => s.reel).map((s) => s.id);
 export const CARDS = ['card_warm', 'card_flash', 'card_van', 'card_pin', 'card_moves', 'card_copy', 'card_cold'];
 export const PIN = '1103';
+export const READ_TIME = 5.5; // seconds to pull one file off the card (USB 1.1, 1997)
 const SLOT_NAMES = Object.fromEntries(BOARD_SLOTS.map((s) => [s.slot, s.label]));
 
 // ACT I — "The Card": Walt's trail-cam captures at the desk.
@@ -48,22 +49,30 @@ export class Act1 {
     if (ni > st.readIdx) {
       // the 1997 card reader is slow: every new file is read off the card
       st.readIdx = ni;
-      audio.sfx('read');
-      if (def.burst === '1/3') { this.playBurst(ni); return; }
-      this.showFrame(ni, 'dissolve');
-      g.viewer.holdUntil = g.time + 0.9;
-      g.save();
+      this.readFile(ni, () => { if (def.burst === '1/3') this.playBurst(ni); else g.save(); });
       return;
     }
     this.showFrame(ni, dir > 0 ? 'cut' : 'cut');
+  }
+
+  // The reader pulls the file off the card: pixels resolve like a slow sensor read.
+  readFile(i, then) {
+    const g = this.g;
+    this.busy = true;
+    this.reading = { i, t0: g.time };
+    audio.sfx('read');
+    const tick = setInterval(() => { if (!this.reading) clearInterval(tick); else audio.sfx('read', { gain: 0.5 }); }, 1400);
+    g.viewer.show(REEL[i], 'fade', { dur: READ_TIME, hold: READ_TIME });
+    this.st.reelIdx = i; g.viewer.prev = i > 0 ? REEL[i - 1] : null; g.viewer.tool.on = this.ctl.toolOn;
+    setTimeoutGame(g, READ_TIME, () => { this.reading = null; clearInterval(tick); audio.sfx('beep', { gain: 0.3 }); this.busy = false; then && then(); });
   }
 
   // Trail-cam burst: three stills, one second apart, with the mechanical click.
   playBurst(i) {
     const g = this.g;
     this.busy = true;
-    const ids = [i, i + 1, i + 2];
-    ids.forEach((k, n) => setTimeoutGame(g, n * 1.0, () => { audio.sfx('trailclick'); this.st.readIdx = Math.max(this.st.readIdx, k); this.showFrame(k, 'cut'); }));
+    const ids = [i + 1, i + 2];
+    ids.forEach((k, n) => setTimeoutGame(g, 1.0 + n * 1.0, () => { audio.sfx('trailclick'); this.st.readIdx = Math.max(this.st.readIdx, k); this.showFrame(k, 'cut'); }));
     setTimeoutGame(g, 3.0, () => { this.busy = false; g.save(); });
   }
 
@@ -206,6 +215,12 @@ export class Act1 {
     g.viewer.draw(buf, t);
     if (this.mode === 'board') return this.drawBoard(buf, t);
     this.ctl.drawOverlay(buf, t);
+    if (this.reading) {
+      const p = Math.min(1, (t - this.reading.t0) / READ_TIME);
+      ui.rect(W / 2 - 62, 4, 124, 18, COL.k);
+      ui.text(`READING FILE ${String(this.reading.i + 1).padStart(2, '0')}...`, W / 2 - 58, 5, COL.w, null);
+      ui.frame(W / 2 - 58, 14, 116, 5, COL.c); ui.rect(W / 2 - 57, 15, Math.round(114 * p), 3, COL.C);
+    }
     if (this.mode === 'reel' && !this.busy) {
       const n = Object.keys(this.st.evidence).length;
       ui.text(`FILE ${String(this.st.reelIdx + 1).padStart(2, '0')}/${REEL.length}`, W - 66, 3, COL.w, COL.k);

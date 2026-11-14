@@ -7,6 +7,7 @@ import { newState, saveGame, loadGame, clearSave } from './save.js';
 import { StillBank, MANIFEST, BY_ID } from '../render/stills.js';
 import { settings, saveSettings } from '../core/settings.js';
 import { clearCache } from '../core/store.js';
+import { mulberry32 } from '../core/rng.js';
 import { audio } from '../audio/engine.js';
 import { textWidth } from '../render/font5x7.js';
 
@@ -33,6 +34,7 @@ export class Game {
     this.readout = null;
     this.overlay = null; // pause / help / options
     this.debug = q.get('debug') === '1';
+    this.rand = Math.random;
     this.log = [];
     this._bindInput();
   }
@@ -51,12 +53,16 @@ export class Game {
   }
   newGame() {
     this.state = newState(this.q.get('seed') ? +this.q.get('seed') : undefined);
+    this.rand = mulberry32(this.state.seed);
+    this.dread.rng = mulberry32(this.state.seed ^ 0x5bd1e995);
     this.dread.set(0);
     saveGame(this.state);
   }
   continueGame() {
     this.state = loadGame();
     if (!this.state) return false;
+    this.rand = mulberry32((this.state.seed + Math.floor(this.state.elapsed)) >>> 0);
+    this.dread.rng = mulberry32(this.state.seed ^ 0x5bd1e995);
     this.dread.set(this.state.dread || 0);
     return true;
   }

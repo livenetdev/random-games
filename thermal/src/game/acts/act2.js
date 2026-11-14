@@ -8,6 +8,8 @@ import { textWidth } from '../../render/font5x7.js';
 
 const DIRS = { ArrowUp: 'up', ArrowLeft: 'left', ArrowRight: 'right', ArrowDown: 'down', KeyW: 'up', KeyA: 'left', KeyD: 'right', KeyS: 'down' };
 const ARROW = { up: '↑', left: '←', right: '→', down: '↓' };
+export const WALK_TIME = 5.5;   // ~50 m of dark trail between places
+export const FLASH_READY = 1.5; // the disposable's flash takes this long to recycle
 const CAMNAME = { cam1: 'CAM 1', cam2: 'CAM 2', cam3: 'CAM 3' };
 
 // ACT II — "Flash": the power is out. Movement is taking photos.
@@ -115,8 +117,9 @@ export class Act2 {
   release() {
     this.charging = false;
     audio.chargeStop();
-    const charge = Math.min(1, (this.g.time - this.chargeT0) / 2.5);
-    if (charge < 0.12) { this.g.say('HOLD TO CHARGE THE FLASH.', 1.5); return; }
+    const held = this.g.time - this.chargeT0;
+    const charge = Math.min(1, held / 3.5);
+    if (held < FLASH_READY) { this.g.say('THE FLASH ISN\'T READY. HOLD UNTIL THE WHINE PEAKS.', 2); return; }
     this.shoot(charge, this.sel);
   }
   shoot(charge, dir) {
@@ -125,10 +128,11 @@ export class Act2 {
     const to = dir ? this.exits()[dir] : null;
     st.film -= 1;
     audio.sfx('wind');
-    const walk = to ? 1.8 : 0.3;
+    const walk = to ? WALK_TIME : 0.3;
     if (to) {
       audio.sfx('walk', { surface: NODES[to].surface || 'leaves' });
-      if (this.itDist() <= 2 && Math.random() < 0.6) { audio.echoStep(NODES[to].surface || 'leaves', 2100); g.caption('[footsteps behind you]', 3); }
+      setTimeoutGame(this.g, 2.3, () => audio.sfx('walk', { surface: NODES[to].surface || 'leaves' }));
+      if (this.itDist() <= 2 && g.rand() < 0.6) { audio.echoStep(NODES[to].surface || 'leaves', 2100); g.caption('[footsteps behind you]', 3); }
     }
     setTimeoutGame(g, walk, () => {
       if (to) { st.node = to; if (!st.visited.includes(to)) st.visited.push(to); }
@@ -144,8 +148,8 @@ export class Act2 {
       setTimeoutGame(g, hold, () => {
         g.viewer.startAfterimage(); g.viewer.blank();
         this.updateNear();
-        if (encounter) this.encounter();
-        else this.afterShot();
+        // the afterimage burns for 1.5 s: you can't see anything else
+        setTimeoutGame(g, 1.5, () => { if (encounter) this.encounter(); else this.afterShot(); });
       });
     });
   }
@@ -168,7 +172,7 @@ export class Act2 {
       st.battery = Math.max(0, st.battery - 10);
       // then it is somewhere else
       const far = Object.keys(NODES).filter((n) => n !== 'van' && n !== 'drive' && (shortestPath(n, st.node)?.length || 0) >= 4);
-      st.itNode = far[Math.floor(Math.random() * far.length)] || 'powerline';
+      st.itNode = far[Math.floor(g.rand() * far.length)] || 'powerline';
       this.updateNear();
       setTimeoutGame(g, 1.4, () => this.afterShot());
     });
@@ -176,12 +180,12 @@ export class Act2 {
   moveIt(charge) {
     const st = this.st;
     const p = 0.4 + 0.35 * charge + 0.15 * this.g.dread.v;
-    if (Math.random() < p) {
+    if (this.g.rand() < p) {
       const path = shortestPath(st.itNode, st.node, (a, b) => b === 'van');
       if (path && path.length > 1) st.itNode = path[1];
-    } else if (Math.random() < 0.5) {
+    } else if (this.g.rand() < 0.5) {
       const ex = Object.values(NODES[st.itNode].exits).filter((n) => n !== 'van');
-      st.itNode = ex[Math.floor(Math.random() * ex.length)] || st.itNode;
+      st.itNode = ex[Math.floor(this.g.rand() * ex.length)] || st.itNode;
     }
     // never on the start node before the first reset; never shadows the camera you need
     if (st.itNode === 'van') st.itNode = 'gate';
@@ -258,7 +262,7 @@ export class Act2 {
       else if (st.battery < 15 && ((this.g.time * 0.5) | 0) !== this.lastBeep) { this.lastBeep = (this.g.time * 0.5) | 0; audio.sfx('battery', { gain: 0.4 }); }
     }
     if (this.charging) {
-      this.charge = Math.min(1, (this.g.time - this.chargeT0) / 2.5);
+      this.charge = Math.min(1, (this.g.time - this.chargeT0) / 3.5);
       if (this.g.time - this.chargeT0 > 6) this.release();
     }
   }
@@ -289,7 +293,7 @@ export class Act2 {
     ui.text('M MAP', W - 34, H - 10, COL.b, COL.k);
     if (this.charging) {
       const w = Math.round(60 * this.charge);
-      ui.frame(W / 2 - 31, H - 20, 62, 6, COL.y); ui.rect(W / 2 - 30, H - 19, w, 4, this.charge >= 1 ? COL.W : COL.Y);
+      ui.frame(W / 2 - 31, H - 20, 62, 6, COL.y); ui.rect(W / 2 - 30, H - 19, w, 4, this.g.time - this.chargeT0 >= FLASH_READY ? (this.charge >= 1 ? COL.W : COL.Y) : COL.r);
     }
   }
   drawMap(buf, t) {

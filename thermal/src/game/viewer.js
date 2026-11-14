@@ -52,7 +52,7 @@ export class Viewer {
     this.holdUntil = now + (o.hold ?? 0.4);
     if (type === 'flash' && settings.reduceFlashes) type = 'fade';
     if (type === 'dissolve' && from) this.trans = { type, from, t0: now, dur: o.dur ?? 0.45 };
-    else if (type === 'fade') this.trans = { type, t0: now, dur: 0.2 };
+    else if (type === 'fade') this.trans = { type, t0: now, dur: o.dur ?? 0.2 };
     else if (type === 'flash') { this.trans = null; this.flash = { t0: now, gain: o.gain ?? 1 }; }
     else this.trans = null;
     // subliminal insert: one 16ms frame of something else

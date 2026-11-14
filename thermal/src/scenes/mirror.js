@@ -4,10 +4,10 @@ import { mesh, box, sphere, heat, jitter } from '../props/util.js';
 // Cold ending: the rear-view mirror. Empty road behind. One bright-white blob on the back seat.
 export function build(rng, variant, P = {}) {
   const scene = makeScene();
-  scene.add(ground(rng, { t: 0.17 }));
+  scene.add(ground(rng, { t: 0.165, noise: 0.025 }));
   scene.add(strip(rng, 0, 2, 0, 160, { width: 7, t: 0.09 }));
-  treeBand(rng, scene, { x0: -40, x1: -6, z0: 6, z1: 150, n: 70, t: 0.215, hMin: 10, hMax: 20 });
-  treeBand(rng, scene, { x0: 6, x1: 40, z0: 6, z1: 150, n: 70, t: 0.215, hMin: 10, hMax: 20 });
+  treeBand(rng, scene, { x0: -40, x1: -6, z0: 6, z1: 150, n: 70, t: 0.26, hMin: 10, hMax: 20 });
+  treeBand(rng, scene, { x0: 6, x1: 40, z0: 6, z1: 150, n: 70, t: 0.26, hMin: 10, hMax: 20 });
   // car interior behind the driver (car faces -z; we look +z)
   const seat = heat(0.24, { noise: 0.05, nscale: 3, alb: 0.4 });
   scene.add(mesh(box(1.5, 0.5, 0.6), seat, 0, 0.5, 1.5));
