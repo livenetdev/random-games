@@ -643,9 +643,9 @@
   "style": "monitor",
   "id": "a1_live",
   "act": 1,
-  "scene": "trailer",
+  "scene": "desk",
   "variant": "live",
-  "cam": "CAM 2",
+  "cam": "CAM 4 (INSIDE)",
   "time": "now",
   "date": "11/14/1997",
   "params": {
@@ -2479,11 +2479,11 @@
   "scene": "van",
   "node": "drive",
   "params": {
-   "dist": 15,
+   "dist": 8.5,
    "lights": 0,
    "engine": 0,
    "door": 0,
-   "camX": -1.5
+   "camX": -1.2
   },
   "id": "n_drive_f",
   "variant": "cold"
@@ -2497,11 +2497,11 @@
   "scene": "van",
   "node": "drive",
   "params": {
-   "dist": 15,
+   "dist": 8.5,
    "lights": 0,
    "engine": 0,
    "door": 0,
-   "camX": -1.5
+   "camX": -1.2
   },
   "id": "n_drive_t",
   "variant": "cold"
@@ -2515,11 +2515,11 @@
   "scene": "van",
   "node": "drive",
   "params": {
-   "dist": 15,
+   "dist": 8.5,
    "lights": 0,
    "engine": 0,
    "door": 0,
-   "camX": -1.5,
+   "camX": -1.2,
    "doorFig": true,
    "stage": 0.65
   },
@@ -2710,7 +2710,7 @@
   "params": {
    "walt": "driver",
    "stage": 0.85,
-   "dist": 30
+   "dist": 21
   },
   "hasIt": true
  },
@@ -2854,7 +2854,7 @@
   "params": {
    "walt": "door",
    "stage": 0.85,
-   "dist": 30
+   "dist": 21
   },
   "hasIt": true
  },

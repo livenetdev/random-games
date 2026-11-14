@@ -34,6 +34,7 @@ export class StillControls {
     const s = this.sliderRect();
     if (this.v.tool.on && x >= s.x - 4 && y >= s.y && y <= s.y + s.h) { this.slider = true; this.setSlider(y); return true; }
     this.circle = { x0: x, y0: y, x1: x, y1: y };
+    this.press = { t: this.g.time };
     return false;
   }
   setSlider(y) { const s = this.sliderRect(); this.v.tool.level = Math.max(0, Math.min(1.2, 1.2 * (1 - (y - s.y) / s.h))); }
@@ -42,6 +43,8 @@ export class StillControls {
     if (this.circle && this.g.mouse.down) { this.circle.x1 = x; this.circle.y1 = y; }
   }
   pointerUp(x, y, drag) {
+    if (this.press?.blink) { this.press = null; this.blinkHeld = false; this.v.blink = false; this.circle = null; return true; }
+    this.press = null;
     if (this.slider) { this.slider = false; this.circle = null; return true; }
     const c = this.circle; this.circle = null;
     if (drag && c && this.owner.circled) { this.owner.circled(c.x0, c.y0, c.x1, c.y1); return true; }
@@ -49,6 +52,11 @@ export class StillControls {
   }
   update() {
     const v = this.v;
+    // touch: long-press = hold Space (blink comparator)
+    const m0 = this.g.mouse;
+    if (this.press && m0.down && !m0.dragging && m0.type === 'touch' && this.g.time - this.press.t > 0.5 && !this.press.blink) {
+      this.press.blink = true; this.blinkHeld = true; this.blinkT0 = this.g.time;
+    }
     if (this.blinkHeld && v.prev) v.blink = Math.floor((this.g.time - this.blinkT0) * 4) % 2 === 1;
     // reset zoom bookkeeping when the still changes
     if (!v.zoom) this.zoomZ = 1;

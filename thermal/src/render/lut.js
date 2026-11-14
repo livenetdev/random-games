@@ -9,7 +9,7 @@ export const LUTS = {
   // Iron: black -> blue -> magenta -> red -> yellow -> white
   iron: { name: 'iron', bands: [C.black, C.blue, C.magenta, C.red, C.bred, C.yellow, C.byellow, C.bwhite], stops: [0, 0.13, 0.25, 0.37, 0.5, 0.6, 0.8, 0.97, 1.0], hot: 4 },
   // Monochrome green night-vision
-  night: { name: 'night', bands: [C.black, [C.black, C.green], C.green, [C.green, C.bgreen], C.bgreen, [C.bgreen, C.bwhite], C.bwhite], hot: 5 },
+  night: { name: 'night', bands: [C.black, [C.black, C.green], C.green, [C.green, C.bgreen], C.bgreen, [C.bgreen, C.bwhite], C.bwhite], hot: 5, gain: 1.35 },
   // Cheap disposable flash: overexposed centre, falloff to black. 4 bands.
   flash: { name: 'flash', bands: [C.black, C.blue, C.white, C.bwhite], hot: 3, flash: true },
   // Flatbed scan for Walt's index cards.

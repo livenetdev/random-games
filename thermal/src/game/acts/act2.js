@@ -306,7 +306,8 @@ export class Act2 {
   drawMap(buf, t) {
     const g = this.g, ui = g.ui, st = this.st;
     g.viewer.composeStill('map', buf, t, { noOsd: true, noTool: true });
-    const pos = mapLayout();
+    const pos0 = mapLayout(), kx = g.display.w / 320, ky = g.display.h / 200;
+    const pos = Object.fromEntries(Object.entries(pos0).map(([k, p]) => [k, { x: Math.round(p.x * kx), y: Math.round(p.y * ky) }]));
     for (const n of st.visited) { const p = pos[n]; ui.text('X', p.x - 2, p.y - 3, COL.R, null); }
     const p = pos[st.node];
     ui.ellipse(p.x - 7, p.y - 7, p.x + 7, p.y + 7, COL.R, t);

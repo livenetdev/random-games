@@ -184,9 +184,9 @@ export class Act1 {
     this.ctl.toolOn = false; g.viewer.tool.on = false;
     const T = (s, f) => setTimeoutGame(g, s, f);
     g.say('THAT\'S ALL OF THEM.', 2.5);
-    T(2.5, () => { audio.sfx('beep'); T(0.25, () => audio.sfx('beep')); g.say('NEW FILE: CAM 2 · LIVE', 3, COL.Y); });
+    T(2.5, () => { audio.sfx('beep'); T(0.25, () => audio.sfx('beep')); g.say('NEW FILE: CAM 4 · LIVE', 3, COL.Y); });
     T(4.0, () => { audio.sfx('read'); g.viewer.show('a1_live', 'dissolve', { dur: 0.9, noSub: true }); g.dread.add(0.15); });
-    T(6.5, () => g.say('THAT\'S THE TRAILER. THAT\'S ME AT THE DESK.', 3.2));
+    T(6.5, () => g.say('WALT HAD A CAMERA IN HERE. THAT\'S ME AT THE DESK.', 3.2));
     T(10.0, () => { g.lines = []; audio.silence(1200); g.viewer.osdOverride = false; });
     T(11.2, () => { g.viewer.osdOverride = null; audio.sfx('stinger'); g.viewer.show('a1_face', 'cut', { noSub: true }); g.dread.add(0.3); });
     T(11.9, () => { g.viewer.blank(); audio.sfx('powerdown'); g.caption('[the hum dies]'); audio.setScene('silent'); });
@@ -233,7 +233,9 @@ export class Act1 {
   drawBoard(buf, t) {
     const g = this.g, ui = g.ui, W = g.display.w;
     const tmp = g.viewer.a;
-    for (const s of BOARD_SLOTS) {
+    const kx = W / 320, ky = g.display.h / 200;
+    for (const s0 of BOARD_SLOTS) {
+      const s = { ...s0, x: Math.round(s0.x * kx), y: Math.round(s0.y * ky), w: Math.round(s0.w * kx), h: Math.round(s0.h * ky) };
       const e = this.st.evidence[s.slot];
       if (!e || !g.bank.has(e.id)) continue;
       // crop the pinned region from the still (as it looked when circled)

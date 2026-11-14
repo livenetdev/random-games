@@ -20,7 +20,7 @@ export class Compositor {
     const { w, h, th, idx } = this;
     const lut = typeof p.lut === 'string' ? getLut(p.lut) : p.lut;
     const N = lut.bands.length;
-    const gain = p.gain ?? 1, off = p.offset ?? 0;
+    const gain = (p.gain ?? 1) * (lut.gain ?? 1), off = p.offset ?? 0;
     const tool = p.tool && p.tool.on ? p.tool : null;
     const lo = tool ? tool.level - tool.width / 2 : 0, inv = tool ? 1 / tool.width : 1;
     const amp = p.ditherAmp ?? 0.85;

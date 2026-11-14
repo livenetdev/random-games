@@ -38,7 +38,7 @@ export const NODES = {
   gate: { label: 'THE GATE', x: 4, y: 3, surface: 'gravel', exits: { down: 'fence', left: 'road', right: 'blind', up: 'drive' },
     scene: 'forest', params: { open: true, path: 'straight', surface: 'gravel', props: [{ type: 'gate', x: 0, z: -6, open: 0.15 }, { type: 'mailbox', x: 2.8, z: -5 }] }, it: { x: 0.4, z: -9, pose: 'stand' } },
   drive: { label: 'CAM 3 DRIVE', x: 5, y: 3, surface: 'gravel', cam: 'cam3', exits: { down: 'gate', up: 'van' },
-    scene: 'van', variant: 'cold', params: { dist: 15, lights: 0, engine: 0, door: 0, camX: -1.5 }, it: { doorFig: true } },
+    scene: 'van', variant: 'cold', params: { dist: 8.5, lights: 0, engine: 0, door: 0, camX: -1.2 }, it: { doorFig: true } },
   van: { label: 'THE VAN', x: 6, y: 3, surface: 'gravel', exits: {} },
 };
 

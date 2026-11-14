@@ -10,11 +10,12 @@ import path from 'path';
 const require = createRequire(import.meta.url);
 const { chromium } = require('playwright');
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const profile = path.join(root, 'node_modules', '.thermal-profile');
+const DIST = process.env.DIST === '1'; // play the production build straight from file:// (offline)
+const profile = path.join(root, 'node_modules', DIST ? '.thermal-profile-dist' : '.thermal-profile');
 mkdirSync(profile, { recursive: true });
-const server = await createServer({ root, logLevel: 'error', server: { port: 5198, strictPort: false } });
-await server.listen();
-const port = server.config.server.port;
+const server = DIST ? null : await createServer({ root, logLevel: 'error', server: { port: 5198, strictPort: false } });
+if (server) await server.listen();
+const base = DIST ? `file://${path.join(root, 'dist', 'index.html')}` : `http://localhost:${server.config.server.port}/`;
 const args = ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--autoplay-policy=no-user-gesture-required'];
 const ctx = await chromium.launchPersistentContext(profile, { args, viewport: { width: 640, height: 400 } });
 const results = {};
@@ -24,7 +25,7 @@ for (const mode of (process.argv[2] ? [process.argv[2]] : ['min', 'human'])) {
   page.on('pageerror', (e) => errors.push(e.message));
   page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
   const ts = +(process.env.TS || 6);
-  await page.goto(`http://localhost:${port}/?skipwarn=1&autopilot=${mode}&timescale=${ts}&seed=1103`);
+  await page.goto(`${base}?skipwarn=1&autopilot=${mode}&timescale=${ts}&seed=1103`);
   const t0 = Date.now();
   while (!(await page.evaluate(() => !!window.__speedrun))) {
     await page.waitForTimeout(15000);
@@ -36,8 +37,8 @@ for (const mode of (process.argv[2] ? [process.argv[2]] : ['min', 'human'])) {
   console.log(mode, JSON.stringify(results[mode]));
   await page.close();
 }
-writeFileSync(path.join(root, 'docs', 'speedrun.json'), JSON.stringify(results, null, 1));
+writeFileSync(path.join(root, 'docs', DIST ? 'speedrun-dist.json' : 'speedrun.json'), JSON.stringify(results, null, 1));
 const ok = (results.min?.totalMin ?? 99) >= 8 && (results.human?.totalMin ?? 99) >= 12;
 console.log(ok ? 'PACING OK (min >= 8, realistic >= 12)' : 'PACING CHECK FAILED');
 await ctx.close();
-await server.close();
+if (server) await server.close();

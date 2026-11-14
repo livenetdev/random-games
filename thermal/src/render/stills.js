@@ -4,7 +4,7 @@ import { drawCard } from './cards.js';
 import { getCached, putCached } from '../core/store.js';
 import { hashStr } from '../core/rng.js';
 
-export const RENDER_VERSION = 'r8';
+export const RENDER_VERSION = 'r9';
 export const BY_ID = Object.fromEntries(MANIFEST.map((s) => [s.id, s]));
 export { MANIFEST };
 

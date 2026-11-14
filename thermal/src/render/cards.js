@@ -56,7 +56,7 @@ export function drawCard(def, W, H, state = {}) {
   // desk surface
   ctx.fillStyle = g(0.08); ctx.fillRect(0, 0, W, H);
   for (let i = 0; i < 400; i++) { ctx.fillStyle = g(rng.range(0.04, 0.14)); ctx.fillRect(rng.range(0, W), rng.range(0, H), rng.range(2, 30), 2); }
-  const u = W / 320; // output-pixel unit
+  const u = W / 320; // output-pixel unit (x)
   if (def.kind === 'board') return drawBoard(ctx, cv, W, H, rng, u);
   if (def.kind === 'map') return drawMap(ctx, cv, W, H, rng, u, state);
   const cw = 250 * u, ch = 160 * u, rot = rng.range(-0.06, 0.06);
@@ -91,12 +91,13 @@ function drawBoard(ctx, cv, W, H, rng, u) {
   ctx.fillStyle = g(0.3); ctx.fillRect(4 * u, 4 * u, W - 8 * u, H - 8 * u);
   for (let i = 0; i < 2500; i++) { ctx.fillStyle = g(rng.range(0.24, 0.36)); ctx.fillRect(rng.range(0, W), rng.range(0, H), 2 * u, 2 * u); }
   ctx.strokeStyle = g(0.2); ctx.lineWidth = 6 * u; ctx.strokeRect(4 * u, 4 * u, W - 8 * u, H - 8 * u);
+  const v = H / 200;
   for (const s of BOARD_SLOTS) {
     // empty photo outline + label card under it
     ctx.strokeStyle = g(0.55); ctx.lineWidth = 1.5 * u; ctx.setLineDash([3 * u, 3 * u]);
-    ctx.strokeRect(s.x * u, s.y * u, s.w * u, s.h * u); ctx.setLineDash([]);
-    ctx.fillStyle = g(0.74); ctx.fillRect(s.x * u, (s.y + s.h + 3) * u, s.w * u, 13 * u);
-    handwrite(ctx, s.label, (s.x + 3) * u, (s.y + s.h + 6) * u, 7 * u, rng, 0.12, 0.2);
+    ctx.strokeRect(s.x * u, s.y * v, s.w * u, s.h * v); ctx.setLineDash([]);
+    ctx.fillStyle = g(0.74); ctx.fillRect(s.x * u, (s.y + s.h + 3) * v, s.w * u, 13 * v);
+    handwrite(ctx, s.label, (s.x + 3) * u, (s.y + s.h + 6) * v, 7 * u, rng, 0.12, 0.2);
   }
   handwrite(ctx, 'WALT', 140 * u, 6 * u, 9 * u, rng, 0.16, 0.2);
   return cv;

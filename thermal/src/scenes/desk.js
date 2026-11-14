@@ -2,6 +2,7 @@ import { makeScene, makeCam, itFigure } from './common.js';
 import { mesh, box, cyl, heat } from '../props/util.js';
 import { desk, crt, chair, lantern } from '../props/small.js';
 import { doorframe } from '../props/structures.js';
+import { figure } from '../props/figure.js';
 
 // Walt's desk inside the trailer. Card reader, CRT, index cards, corkboard.
 export function build(rng, variant, P = {}) {
@@ -31,11 +32,18 @@ export function build(rng, variant, P = {}) {
   // fridge coils on the right wall (warm)
   scene.add(mesh(box(0.7, 1.7, 0.7), heat(0.3, { noise: 0.04, alb: 0.7, grad: -0.08, gradBase: 0.6 }), 1.9, 0.85, 0.4));
   const df = doorframe({ t: 0.24 }); df.position.set(-2.1, 0, 1.4); df.rotation.y = Math.PI / 2; scene.add(df);
+  if (variant === 'live') {
+    // Walt's indoor camera, high in the corner: Dana at the desk, something right behind her chair
+    const ch = chair({ t: 0.26 }); ch.position.set(-0.05, 0, -0.15); ch.rotation.y = Math.PI; scene.add(ch);
+    const dn = figure({ temp: 0.64, pose: 'sit', tagName: 'dana', seed: 21 }); dn.position.set(-0.05, 0.0, -0.1); dn.rotation.y = Math.PI; scene.add(dn);
+    const f = itFigure(P.stage ?? 0.5, 'standSlouch'); f.position.set(-0.75, 0, 0.45); f.rotation.y = Math.PI * 0.8; scene.add(f);
+  }
   if (variant === 'behind') {
     // after the jump: it is in the doorway behind the chair
     const f = itFigure(P.stage ?? 0.25, 'stand'); f.position.set(-1.6, 0, 1.4); f.rotation.y = 1.2; scene.add(f);
   }
-  const camera = variant === 'wide' || variant === 'behind'
+  const camera = variant === 'live' ? makeCam([1.9, 2.25, 2.2], [-0.2, 0.9, -0.5], 62)
+    : variant === 'wide' || variant === 'behind'
     ? makeCam([1.6, 1.6, 2.2], [-0.6, 1.0, -0.8], 60)
     : makeCam([0.1, 1.25, 0.55], [-0.1, 0.95, -0.9], 58);
   return { scene, camera, fog: 0.0, ambient: 0.0 };

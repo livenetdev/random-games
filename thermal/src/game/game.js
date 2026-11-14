@@ -211,7 +211,7 @@ export class OptionsMenu {
     else if (code === 'ArrowRight' || code === 'Enter' || code === 'Space') this.act(this.sel, 1);
     else if (code === 'Escape') { saveSettings(); this.g.overlay = this.back; }
   }
-  layout() { const items = this.items(); return { x: 60, y: 40, w: 200, items }; }
+  layout() { const items = this.items(); return { x: Math.max(8, (this.g.display.w - 200) / 2) | 0, y: 40, w: Math.min(200, this.g.display.w - 16), items }; }
   hover(x, y) { const L = this.layout(); const i = Math.floor((y - L.y + 2) / 11); if (x > L.x - 4 && x < L.x + L.w && i >= 0 && i < L.items.length) this.sel = i; }
   click(x, y) { this.hover(x, y); const L = this.layout(); const i = Math.floor((y - L.y + 2) / 11); if (i >= 0 && i < L.items.length && x > L.x - 4 && x < L.x + L.w) this.act(i, x > L.x + L.w / 2 ? 1 : -1); }
   draw(buf, t) {

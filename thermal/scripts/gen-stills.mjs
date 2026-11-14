@@ -53,7 +53,7 @@ add({ id: 'a1_20b', act: 1, scene: 'trailer', variant: 'window', ...cam(2), para
 add({ id: 'a1_23b', act: 1, scene: 'drive', variant: 'tonight2', ...cam(3), params: { stage: 0.45 }, variantOf: 'a1_23', hasIt: true });
 for (const s of S) if (s.variantOf) { const b = S.find((x) => x.id === s.variantOf); Object.assign(s, { time: b.time, date: b.date, temp: b.temp }); }
 // live feed + first earned jump-scare
-add({ id: 'a1_live', act: 1, scene: 'trailer', variant: 'live', cam: 'CAM 2', lut: 'night', style: 'monitor', time: 'now', date: '11/14/1997', params: { stage: 0.5 }, hasIt: true });
+add({ id: 'a1_live', act: 1, scene: 'desk', variant: 'live', cam: 'CAM 4 (INSIDE)', lut: 'night', style: 'monitor', time: 'now', date: '11/14/1997', params: { stage: 0.5 }, hasIt: true });
 add({ id: 'a1_scare', act: 1, scene: 'desk', variant: 'behind', style: 'none', params: { stage: 0.5 }, hasIt: true });
 add({ id: 'a1_face', act: 1, scene: 'close', variant: 'face', style: 'none', params: { stage: 0.45 }, hasIt: true });
 
@@ -94,7 +94,7 @@ for (const [c, [scene, num]] of Object.entries(bursts)) {
 for (const w of ['driver', 'door']) {
   const W = w === 'driver' ? 'A' : 'B';
   const p = (o) => ({ walt: w, stage: 0.85, ...o });
-  add({ id: `a3_approach_${W}`, act: 3, scene: 'van', variant: 'far', style: 'handheld', params: p({ dist: 30 }), hasIt: true });
+  add({ id: `a3_approach_${W}`, act: 3, scene: 'van', variant: 'far', style: 'handheld', params: p({ dist: 21 }), hasIt: true });
   add({ id: `a3_far_f_${W}`, act: 3, scene: 'van', variant: 'far', mode: 'flash', lut: 'flash', style: 'flash', params: p({}) });
   add({ id: `a3_far_t_${W}`, act: 3, scene: 'van', variant: 'far', style: 'handheld', params: p({}), hasIt: true });
   add({ id: `a3_mid_f_${W}`, act: 3, scene: 'van', variant: 'mid', mode: 'flash', lut: 'flash', style: 'flash', params: p({}) });

@@ -82,11 +82,11 @@ export function build(rng, variant, P = {}) {
     }
     case 'live': {
       // Dana at Walt's desk, back to the window. Something stands behind her.
-      const d = desk({ t: 0.25 }); d.position.set(-2.4, 0.85, -0.9); scene.add(d);
-      const m = crt({ on: 1 }); m.position.set(-2.4, 1.65, -1.0); m.rotation.y = 0; scene.add(m);
-      const ch = chair({ t: 0.25 }); ch.position.set(-2.4, 0.85, -0.2); ch.rotation.y = Math.PI; scene.add(ch);
-      const dn = figure({ temp: 0.66, pose: 'sit', tagName: 'dana', seed: 21 }); dn.position.set(-2.4, 0.85 + 0.0, -0.15); dn.rotation.y = Math.PI; scene.add(dn);
-      const f = itFigure(stage, 'stand'); f.position.set(-1.7, 0.85, 0.6); f.rotation.y = Math.PI * 0.9; scene.add(f);
+      const d = desk({ t: 0.25 }); d.position.set(-2.3, 0.8, -0.6); scene.add(d);
+      const m = crt({ on: 1 }); m.position.set(-2.3, 1.6, -0.75); m.rotation.y = 0; scene.add(m);
+      const ch = chair({ t: 0.25 }); ch.position.set(-2.3, 0.8, 0.2); ch.rotation.y = Math.PI; scene.add(ch);
+      const dn = figure({ temp: 0.66, pose: 'sit', tagName: 'dana', seed: 21 }); dn.position.set(-2.3, 0.8, 0.25); dn.rotation.y = Math.PI; scene.add(dn);
+      const f = itFigure(stage, 'stand'); f.position.set(-1.9, 0.8, 1.2); f.rotation.y = Math.PI * 0.9; scene.add(f);
       break;
     }
     case 'door': break;
@@ -95,6 +95,6 @@ export function build(rng, variant, P = {}) {
     case 'dana3': { const f = itFigure(stage, 'camera'); f.position.set(0.6, 0, 9.4); f.rotation.y = Math.PI * 0.95; scene.add(f); break; }
     default: break;
   }
-  const camera = makeCam([3.6, 1.45, 10.5], [-1.0, 1.6, 0], P.fov ?? 50);
+  const camera = variant === 'live' ? makeCam([-0.6, 1.7, 6.0], [-2.4, 1.6, 0], 44) : makeCam([3.6, 1.45, 10.5], [-1.0, 1.6, 0], P.fov ?? 50);
   return { scene, camera, fog: 0.025, ambient: 0.0 };
 }

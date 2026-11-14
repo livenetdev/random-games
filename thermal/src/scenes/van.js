@@ -52,8 +52,8 @@ export function build(rng, variant, P = {}) {
     if (isIt && variant !== 'dana') f.userData.noFlash = true;
   }
 
-  const dist = P.dist ?? (variant === 'far' ? 22 : variant === 'mid' ? 11 : 2.7);
+  const dist = P.dist ?? (variant === 'far' ? 13 : variant === 'mid' ? 7.5 : 2.7);
   const camX = P.camX ?? -0.35;
   const camera = makeCam([camX, 1.2, 2.8 + dist], [0.15, 1.2, 0], P.fov ?? 52);
-  return { scene, camera, fog: 0.018, ambient: 0.0, flashGain: 1.1, flashFall: 0.03, fx: { bleed: 0.55, bleedTh: 0.8, bleedSigma: 1.6 } };
+  return { scene, camera, fog: 0.018, ambient: 0.0, flashGain: dist > 5 ? 2.6 : 1.1, flashFall: 0.03, fx: { bleed: 0.55, bleedTh: 0.8, bleedSigma: 1.6 } };
 }
