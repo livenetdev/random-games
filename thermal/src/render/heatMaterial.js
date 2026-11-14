@@ -22,7 +22,7 @@ const FRAG = /* glsl */ `
 precision highp float;
 uniform float uMode;      // 0 heat, 1 flash
 uniform float uTemp, uRim, uNoise, uNScale, uGradY, uGradBase;
-uniform float uAlb, uSpec, uEmit, uFlashFall, uSeed, uFog, uAmb;
+uniform float uAlb, uSpec, uEmit, uFlashFall, uSeed, uFog, uAmb, uFlashGain;
 uniform float uHotAdd, uHotR, uGlow;
 uniform vec3 uHotPt;
 varying vec3 vW;
@@ -49,9 +49,9 @@ void main(){
     v += uHotAdd * (1.0 - smoothstep(0.0, uHotR, distance(vW, uHotPt)));
     v = mix(v, uAmb, 1.0 - exp(-vD*uFog));
   } else {
-    float lam = 0.2 + 0.8*ndv;
-    float cone = pow(clamp(vCos, 0.0, 1.0), 7.0);
-    v = cone*uAlb*lam*(1.0 + uNoise*(n-0.5)*1.5) / (1.0 + uFlashFall*vD*vD);
+    float lam = 0.5 + 0.5*ndv;
+    float cone = pow(clamp(vCos, 0.0, 1.0), 3.0);
+    v = uFlashGain*cone*uAlb*lam*(1.0 + uNoise*(n-0.5)*1.5) / (1.0 + uFlashFall*vD*vD);
     v += uSpec*pow(ndv, 18.0) / (1.0 + 0.015*vD*vD);
     v += uEmit;
   }
@@ -70,6 +70,7 @@ export const sharedUniforms = {
   uFog: { value: 0.03 },
   uAmb: { value: 0.0 },
   uFlashFall: { value: 0.02 },
+  uFlashGain: { value: 4.0 },
 };
 
 // heat(t, opts) -> material. opts: rim, noise, nscale, grad, gradBase, alb, spec, emit, glow, hot:[x,y,z], hotAdd, hotR

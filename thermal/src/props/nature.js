@@ -2,10 +2,10 @@ import { Group } from 'three';
 import { mesh, cone, cyl, ico, box, sphere, heat, jitter } from './util.js';
 
 // Conifer: trunk + noisy cone stack. t ~ cold.
-export function fir(rng, { h = 9, t = 0.14, r = null } = {}) {
+export function fir(rng, { h = 9, t = 0.2, r = null } = {}) {
   const g = new Group();
   const rr = r ?? h * 0.22;
-  const trunk = heat(t + 0.04, { noise: 0.04, nscale: 2, alb: 0.25, rim: -0.02 });
+  const trunk = heat(t + 0.08, { noise: 0.04, nscale: 2, alb: 0.4, rim: -0.02, grad: -0.02, gradBase: 1 });
   const needles = heat(t, { noise: 0.06, nscale: 1.4, alb: 0.32, rim: -0.03 });
   g.add(mesh(cyl(0.12 * h / 9, 0.2 * h / 9, h * 0.45, 6), trunk, 0, h * 0.22, 0));
   const tiers = rng.int(3, 5);
@@ -33,7 +33,7 @@ export function blobTree(rng, { h = 7, t = 0.15 } = {}) {
   return g;
 }
 
-export function bush(rng, { r = 0.7, t = 0.17 } = {}) {
+export function bush(rng, { r = 0.7, t = 0.22 } = {}) {
   const m = heat(t, { noise: 0.06, nscale: 2, alb: 0.3, rim: -0.03 });
   const g = new Group();
   const n = rng.int(2, 4);
@@ -56,11 +56,11 @@ export function crouchBush(rng, { t = 0.3 } = {}) {
   return g;
 }
 
-export function stump(rng, { t = 0.18 } = {}) {
+export function stump(rng, { t = 0.24 } = {}) {
   return mesh(jitter(cyl(0.35, 0.45, 0.5, 7), rng, 0.05), heat(t, { noise: 0.05, alb: 0.3 }), 0, 0.25, 0);
 }
 
-export function rock(rng, { r = 0.6, t = 0.2 } = {}) {
+export function rock(rng, { r = 0.6, t = 0.26 } = {}) {
   const m = mesh(jitter(ico(r, 0), rng, r * 0.3), heat(t, { noise: 0.04, alb: 0.45, rim: -0.02 }), 0, r * 0.4, 0);
   m.scale.y = 0.6;
   return m;

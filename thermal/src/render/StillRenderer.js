@@ -111,7 +111,7 @@ export const DEFAULT_FX = {
   bleed: 0.9,      // radial heat bleed around hot sources
   bleedTh: 0.6,
   bleedSigma: 2.2, // in 1/8-res pixels
-  grain: 0.07,
+  grain: 0.045,
   grainAdd: 0.006,
   vignette: 0.32,
   block: 0.014,
